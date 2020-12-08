@@ -1,0 +1,45 @@
+#ifndef SERVERWORKER_H
+#define SERVERWORKER_H
+
+#include <QObject>
+#include <QReadWriteLock>
+#include <errno.h>
+#include <netinet/in.h>
+#include <pthread.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+class ServerWorker : public QObject {
+  Q_OBJECT
+  Q_DISABLE_COPY ( ServerWorker )
+  static const int PORT = 2001;
+
+public:
+  explicit ServerWorker ( QObject *parent = nullptr );
+  QString userName ( ) const;
+  void setUserName ( const QString &userName );
+  void sendData ( const QJsonObject &json );
+public slots:
+  void disconnectFromClient ( );
+private slots:
+  void receiveData ( );
+signals:
+  void dataReceived ( const QJsonObject &jsonDoc );
+  void disconnectedFromClient ( );
+  void error ( );
+  void logMessage ( const QString &msg );
+
+private:
+  int socketDescriptor;
+  QString m_userName;
+  mutable QReadWriteLock m_userNameLock;
+  struct sockaddr_in server;
+  int nuStiuIncaCumSeCheama ( );
+};
+
+#endif // SERVERWORKER_H
