@@ -25,6 +25,7 @@ public:
   explicit FilesServer ( QObject *parent = nullptr );
   int startServer ( );
   void stopServer ( );
+  void waitingForClients ( );
 
 protected:
   int incomingConnection ( int socketDescriptor );
@@ -37,6 +38,8 @@ private:
   QVector< ServerWorker * > clients;
   struct sockaddr_in server;
   int socketDescriptor;
+private slots:
+  void userDisconnected ( ServerWorker *sender, int threadIdx );
 signals:
   void logMessage ( const QString &msg );
   void stopAllClients ( );

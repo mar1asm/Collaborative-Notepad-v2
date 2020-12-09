@@ -4,15 +4,18 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 
-ServerWorker::ServerWorker ( QObject *parent ) : QObject ( parent ) {
+ServerWorker::ServerWorker ( QObject *parent, int socketDescriptor )
+    : QObject ( parent ) {
   bzero ( &fromSocket, sizeof ( fromSocket ) );
   socklen_t length = sizeof ( fromSocket );
   if ( ( this->client =
-             accept ( socketDescriptor, ( struct sockaddr * ) &fromSocket,
-                      &length ) ) < 0 ) {
+         accept ( socketDescriptor, ( struct sockaddr * ) &fromSocket,
+              &length ) ) < 0 ) {
     perror ( "[thread]Eroare la accept().\n" );
   }
-  receiveData ( );
+  close ( this->client );
+  return;
+  // receiveData ( );
 }
 
 void ServerWorker::receiveData ( ) {
@@ -25,4 +28,5 @@ void ServerWorker::receiveData ( ) {
     perror ( "Eroare la read() de la client.\n" );
   }
   emit logMessage ( QLatin1String ( "Received msg " ) + msg );
+  return;
 }

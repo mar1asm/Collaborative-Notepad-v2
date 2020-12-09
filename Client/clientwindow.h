@@ -1,10 +1,11 @@
 #ifndef CLIENTWINDOW_H
 #define CLIENTWINDOW_H
 
-#include <QMainWindow>
+#include "clientmain.h"
 
 #include <QFile>
 #include <QFileDialog>
+#include <QMainWindow>
 #include <QMessageBox>
 #include <QShortcut>
 #include <QTextStream>
@@ -20,6 +21,7 @@ class ClientWindow : public QMainWindow {
 
 public:
   explicit ClientWindow ( QWidget *parent = 0 );
+  int setConnectionData ( int argc, char *argv[] );
   ~ClientWindow ( );
 
 private slots:
@@ -49,6 +51,9 @@ private:
   Ui::ClientWindow *ui;
   QString currentFile = "";
   bool helper_isSaved ( );
+  int port;
+  char *address;
+  ClientMain *clientMain;
 };
 
 #endif // CLIENTWINDOW_H

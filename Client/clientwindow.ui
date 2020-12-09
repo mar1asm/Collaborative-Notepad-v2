@@ -68,8 +68,15 @@
     <addaction name="actionCut"/>
     <addaction name="actionPaste"/>
    </widget>
+   <widget class="QMenu" name="menuAccount">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionOptions"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuAccount"/>
   </widget>
   <action name="actionNew">
    <property name="text">
@@ -155,6 +162,11 @@
   <action name="actionFrom_PC">
    <property name="text">
     <string>From PC</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Options</string>
    </property>
   </action>
  </widget>

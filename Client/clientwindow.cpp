@@ -6,6 +6,20 @@ ClientWindow::ClientWindow ( QWidget *parent )
   ui->setupUi ( this );
   this->setCentralWidget ( ui->textEdit );
   setWindowTitle ( "New file" );
+  clientMain = new ClientMain ( this );
+}
+
+int ClientWindow::setConnectionData ( int argc, char *argv[] ) {
+  if ( argc != 3 ) {
+    printf ( "[client] Sintaxa: %s <adresa_server> <port>\n", argv[ 0 ] );
+    return -1;
+  }
+  int port = atoi ( argv[ 2 ] );
+  this->port = port;
+  this->address = argv[ 1 ];
+  if ( this->clientMain->connectToServer ( this->address, this->port ) )
+    return -1;
+  return 0;
 }
 
 ClientWindow::~ClientWindow ( ) { delete ui; }
@@ -21,7 +35,7 @@ bool ClientWindow::helper_isSaved ( ) {
   QFile savedFile ( currentFile );
   if ( ! savedFile.open ( QFile::ReadOnly | QFile ::Text ) ) {
     QMessageBox::warning ( this, "Warning",
-                           "Cannot open file : " + savedFile.errorString ( ) );
+               "Cannot open file : " + savedFile.errorString ( ) );
     return false;
   }
   QTextStream in ( &savedFile );
@@ -37,9 +51,9 @@ void ClientWindow::on_actionNew_triggered ( ) {
     QMessageBox saveBeforeClosing ( this );
     saveBeforeClosing.setText ( "The file has been modified" );
     saveBeforeClosing.setInformativeText (
-        "Do you want to save your changes?" );
+    "Do you want to save your changes?" );
     saveBeforeClosing.setStandardButtons (
-        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel );
+    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel );
     saveBeforeClosing.setDefaultButton ( QMessageBox::Save );
     int answer = saveBeforeClosing.exec ( );
     switch ( answer ) {
@@ -67,7 +81,7 @@ void ClientWindow::on_actionFrom_PC_triggered ( ) {
   currentFile = fileName;
   if ( ! file.open ( QIODevice::ReadOnly | QFile ::Text ) ) {
     QMessageBox::warning ( this, "Warning",
-                           "Cannot open file : " + file.errorString ( ) );
+               "Cannot open file : " + file.errorString ( ) );
     return;
   }
   setWindowTitle ( fileName );
@@ -85,7 +99,7 @@ void ClientWindow::on_actionSave_triggered ( ) {
   QFile file ( currentFile );
   if ( ! file.open ( QFile::WriteOnly | QFile ::Text ) ) {
     QMessageBox::warning ( this, "Warning",
-                           "Cannot save file : " + file.errorString ( ) );
+               "Cannot save file : " + file.errorString ( ) );
     return;
   }
   QTextStream out ( &file );
@@ -101,7 +115,7 @@ void ClientWindow::on_actionSave_as_triggered ( ) {
   QFile file ( fileName );
   if ( ! file.open ( QFile::WriteOnly | QFile ::Text ) ) {
     QMessageBox::warning ( this, "Warning",
-                           "Cannot save file : " + file.errorString ( ) );
+               "Cannot save file : " + file.errorString ( ) );
     return;
   }
   currentFile = fileName;

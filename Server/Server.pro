@@ -36,3 +36,5 @@ HEADERS += \
 
 FORMS += \
         serverwindow.ui
+
+DISTFILES +=

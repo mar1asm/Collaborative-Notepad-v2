@@ -19,12 +19,13 @@ void ServerWindow::on_toggleServer_clicked ( ) {
   } else {
     if ( filesServer->startServer ( ) ) {
       QMessageBox::critical ( this, tr ( "Error" ),
-                              tr ( "Unable to start the server" ) );
+                  tr ( "Unable to start the server" ) );
       return;
     }
     isRunning = true;
     logMessage ( QStringLiteral ( "Server Started" ) );
     ui->toggleServer->setText ( tr ( "Stop Server" ) );
+    filesServer->waitingForClients ( );
   }
 }
 

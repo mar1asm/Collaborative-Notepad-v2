@@ -19,7 +19,8 @@ class ServerWorker : public QObject {
   Q_DISABLE_COPY ( ServerWorker )
 
 public:
-  explicit ServerWorker ( QObject *parent = nullptr );
+  explicit ServerWorker ( QObject *parent = nullptr,
+              int socketDescriptor = -1 );
   QString userName ( ) const;
   // void setUserName ( const QString &userName );
   // void sendData ( const QJsonObject &json );
@@ -34,7 +35,6 @@ signals:
   void logMessage ( const QString &msg );
 
 private:
-  int socketDescriptor;
   QString c_userName;
   int client;
   mutable QReadWriteLock m_userNameLock;
