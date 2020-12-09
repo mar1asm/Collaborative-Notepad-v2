@@ -12,7 +12,9 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <thread>
 #include <unistd.h>
+#include <vector>
 class ServerWorker;
 class QThread;
 
@@ -26,20 +28,21 @@ public:
   int startServer ( );
   void stopServer ( );
   void waitingForClients ( );
+  pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 protected:
   int incomingConnection ( int socketDescriptor );
+  void threadCreate ( int );
 
 private:
   ~FilesServer ( );
-  const int idealThreadCount;
-  QVector< QThread * > availableThreads;
-  QVector< int > threadsLoad;
-  QVector< ServerWorker * > clients;
+  void procesare_mesaje_client ( int client, int idThread );
+  const int threadCount = std::thread::hardware_concurrency ( );
   struct sockaddr_in server;
   int socketDescriptor;
-private slots:
-  void userDisconnected ( ServerWorker *sender, int threadIdx );
+  std::vector< std::thread > threadPool;
+  void *treat ( int );
+  QObject serverWindow;
 signals:
   void logMessage ( const QString &msg );
   void stopAllClients ( );

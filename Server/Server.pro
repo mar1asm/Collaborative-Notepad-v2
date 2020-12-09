@@ -26,12 +26,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         serverwindow.cpp \
-    serverworker.cpp \
     filesserver.cpp
 
 HEADERS += \
         serverwindow.h \
-    serverworker.h \
     filesserver.h
 
 FORMS += \

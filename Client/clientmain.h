@@ -26,6 +26,7 @@ private:
   int socketDescriptor;
   struct sockaddr_in server;
   char *address;
+  void trimiteMesaj ( );
 };
 
 #endif // CLIENTMAIN_H

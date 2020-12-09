@@ -15,5 +15,13 @@ int ClientMain::connectToServer ( char *address, int port ) {
     perror ( "[client]Eroare la connect().\n" );
     return errno;
   }
+  trimiteMesaj ( );
   return 0;
+}
+
+void ClientMain::trimiteMesaj ( ) {
+  int nr = 10;
+  if ( write ( socketDescriptor, &nr, sizeof ( int ) ) <= 0 ) {
+    perror ( "[client]Eroare la write() spre server.\n" );
+  }
 }

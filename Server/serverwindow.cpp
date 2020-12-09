@@ -6,6 +6,8 @@ ServerWindow::ServerWindow ( QWidget *parent )
     : QMainWindow ( parent ), ui ( new Ui::ServerWindow ),
       filesServer ( new FilesServer ( this ) ) {
   ui->setupUi ( this );
+  connect ( filesServer, &FilesServer::logMessage, this,
+        &ServerWindow::logMessage );
 }
 
 ServerWindow::~ServerWindow ( ) { delete ui; }
@@ -25,8 +27,8 @@ void ServerWindow::on_toggleServer_clicked ( ) {
     isRunning = true;
     logMessage ( QStringLiteral ( "Server Started" ) );
     ui->toggleServer->setText ( tr ( "Stop Server" ) );
-    filesServer->waitingForClients ( );
   }
+  filesServer->waitingForClients ( ); // to do change name
 }
 
 void ServerWindow::logMessage ( const QString &msg ) {
