@@ -17,7 +17,6 @@
 class ServerWorker : public QObject {
   Q_OBJECT
   Q_DISABLE_COPY ( ServerWorker )
-  static const int PORT = 2001;
 
 public:
   explicit ServerWorker ( QObject *parent = nullptr );

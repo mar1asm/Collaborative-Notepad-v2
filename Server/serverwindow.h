@@ -16,12 +16,13 @@ public:
   ~ServerWindow ( );
 
 private slots:
-  void on_toggleServer_toggled ( bool checked );
   void logMessage ( const QString &msg );
+  void on_toggleServer_clicked ( );
 
 private:
   Ui::ServerWindow *ui;
   FilesServer *filesServer;
+  bool isRunning = false;
 };
 
 #endif // SERVERWINDOW_H

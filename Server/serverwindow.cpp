@@ -1,5 +1,6 @@
 #include "serverwindow.h"
 #include "ui_serverwindow.h"
+#include <QMessageBox>
 
 ServerWindow::ServerWindow ( QWidget *parent )
     : QMainWindow ( parent ), ui ( new Ui::ServerWindow ),
@@ -9,10 +10,24 @@ ServerWindow::ServerWindow ( QWidget *parent )
 
 ServerWindow::~ServerWindow ( ) { delete ui; }
 
-void ServerWindow::on_toggleServer_toggled ( bool checked ) {
-  if ( checked ) {
-    ui->toggleServer->setText ( "Stop Server" );
+void ServerWindow::on_toggleServer_clicked ( ) {
+  if ( isRunning ) {
+    isRunning = false;
+    filesServer->stopServer ( );
+    ui->toggleServer->setText ( tr ( "Start Server" ) );
+    logMessage ( QStringLiteral ( "Server Stopped" ) );
   } else {
-    ui->toggleServer->setText ( "Start Server" );
+    if ( filesServer->startServer ( ) ) {
+      QMessageBox::critical ( this, tr ( "Error" ),
+                              tr ( "Unable to start the server" ) );
+      return;
+    }
+    isRunning = true;
+    logMessage ( QStringLiteral ( "Server Started" ) );
+    ui->toggleServer->setText ( tr ( "Stop Server" ) );
   }
+}
+
+void ServerWindow::logMessage ( const QString &msg ) {
+  ui->serverLog->appendPlainText ( msg + QLatin1Char ( '\n' ) );
 }

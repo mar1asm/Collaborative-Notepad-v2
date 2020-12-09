@@ -40,7 +40,7 @@
      <string>Start server</string>
     </property>
    </widget>
-   <widget class="QPlainTextEdit" name="plainTextEdit">
+   <widget class="QPlainTextEdit" name="serverLog">
     <property name="geometry">
      <rect>
       <x>20</x>
