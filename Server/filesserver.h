@@ -29,7 +29,6 @@ public:
   int startServer ( );
   void stopServer ( );
   // void waitingForClients ( );
-  pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 protected:
   int incomingConnection ( );
@@ -40,7 +39,7 @@ private:
   const int threadCount = std::thread::hardware_concurrency ( );
   struct sockaddr_in server;
   int socketDescriptor;
-  std::vector< ServerWorker > threadPool;
+  std::vector< ServerWorker * > threadPool;
   QObject serverWindow;
 signals:
   void logMessage ( const QString &msg );

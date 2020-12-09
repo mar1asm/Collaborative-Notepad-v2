@@ -25,9 +25,11 @@ private:
   int id;
   void procesare_mesaje_client ( int client );
   int socketDescriptor;
+  void setare ( );
   void *treat ( int );
   pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
   struct sockaddr_in fromSocket;
+  int client;
 public slots:
   void disconnectFromClient ( );
 private slots:

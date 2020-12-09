@@ -28,7 +28,7 @@ void ServerWindow::on_toggleServer_clicked ( ) {
     logMessage ( QStringLiteral ( "Server Started" ) );
     ui->toggleServer->setText ( tr ( "Stop Server" ) );
   }
-  filesServer->waitingForClients ( ); // to do change name
+  // filesServer->waitingForClients ( ); // to do change name
 }
 
 void ServerWindow::logMessage ( const QString &msg ) {
