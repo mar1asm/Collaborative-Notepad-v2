@@ -22,24 +22,24 @@ class ServerWorker : public QObject {
 public:
   explicit ServerWorker ( QObject *parent = nullptr );
   QString userName ( ) const;
-  void setUserName ( const QString &userName );
-  void sendData ( const QJsonObject &json );
+  // void setUserName ( const QString &userName );
+  // void sendData ( const QJsonObject &json );
 public slots:
-  void disconnectFromClient ( );
+  // void disconnectFromClient ( );
 private slots:
   void receiveData ( );
 signals:
-  void dataReceived ( const QJsonObject &jsonDoc );
-  void disconnectedFromClient ( );
-  void error ( );
+  // void dataReceived ( const QJsonObject &jsonDoc );
+  // void disconnectedFromClient ( );
+  // void error ( );
   void logMessage ( const QString &msg );
 
 private:
   int socketDescriptor;
-  QString m_userName;
+  QString c_userName;
+  int client;
   mutable QReadWriteLock m_userNameLock;
-  struct sockaddr_in server;
-  int nuStiuIncaCumSeCheama ( );
+  struct sockaddr_in fromSocket;
 };
 
 #endif // SERVERWORKER_H

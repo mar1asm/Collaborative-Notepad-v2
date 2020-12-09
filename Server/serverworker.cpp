@@ -5,14 +5,24 @@
 #include <QJsonParseError>
 
 ServerWorker::ServerWorker ( QObject *parent ) : QObject ( parent ) {
-  if ( ( socketDescriptor = socket ( AF_INET, SOCK_STREAM, 0 ) ) == -1 )
-    throw "[server]Eroare la socket().\n";
-  int on = 1;
-  setsockopt ( socketDescriptor, SOL_SOCKET, SO_REUSEADDR, &on, sizeof ( on ) );
-  bzero ( &server, sizeof ( server ) );
-  server.sin_family = AF_INET;
-  server.sin_addr.s_addr = htonl ( INADDR_ANY );
-  server.sin_port = htons ( PORT );
+  bzero ( &fromSocket, sizeof ( fromSocket ) );
+  socklen_t length = sizeof ( fromSocket );
+  if ( ( this->client =
+             accept ( socketDescriptor, ( struct sockaddr * ) &fromSocket,
+                      &length ) ) < 0 ) {
+    perror ( "[thread]Eroare la accept().\n" );
+  }
+  receiveData ( );
 }
 
-ServerWorker::nuStiuIncaCumSeCheama ( ) {}
+void ServerWorker::receiveData ( ) {
+  int size;
+  QString msg;
+  if ( read ( client, &size, sizeof ( int ) ) <= 0 ) {
+    perror ( "Eroare la read() de la client.\n" );
+  }
+  if ( read ( client, &msg, size ) <= 0 ) {
+    perror ( "Eroare la read() de la client.\n" );
+  }
+  emit logMessage ( QLatin1String ( "Received msg " ) + msg );
+}

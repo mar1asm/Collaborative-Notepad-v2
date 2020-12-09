@@ -12,7 +12,9 @@ public:
   explicit FilesServer ( QObject *parent = nullptr );
 
 protected:
-  // void incomingConnection ( int socketDescriptor );
+  void startServer ( );
+  void stopServer ( );
+  int incomingConnection ( int socketDescriptor );
 
 private:
   ~FilesServer ( );
@@ -20,6 +22,9 @@ private:
   QVector< QThread * > availableThreads;
   QVector< int > threadsLoad;
   QVector< ServerWorker * > clients;
+signals:
+  void logMessage ( const QString &msg );
+  void stopAllClients ( );
 };
 
 #endif // FILESSERVER_H
