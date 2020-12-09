@@ -1,5 +1,6 @@
 #ifndef FILESSERVER_H
 #define FILESSERVER_H
+#include "serverworker.h"
 #include <QObject>
 #include <QReadWriteLock>
 #include <QVector>
@@ -27,21 +28,19 @@ public:
   explicit FilesServer ( QObject *parent = nullptr );
   int startServer ( );
   void stopServer ( );
-  void waitingForClients ( );
+  // void waitingForClients ( );
   pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 protected:
-  int incomingConnection ( int socketDescriptor );
-  void threadCreate ( int );
+  int incomingConnection ( );
 
 private:
   ~FilesServer ( );
-  void procesare_mesaje_client ( int client, int idThread );
+
   const int threadCount = std::thread::hardware_concurrency ( );
   struct sockaddr_in server;
   int socketDescriptor;
-  std::vector< std::thread > threadPool;
-  void *treat ( int );
+  std::vector< ServerWorker > threadPool;
   QObject serverWindow;
 signals:
   void logMessage ( const QString &msg );

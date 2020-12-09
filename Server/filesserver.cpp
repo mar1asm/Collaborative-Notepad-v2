@@ -35,14 +35,12 @@ void FilesServer::waitingForClients ( ) {
   if ( listen ( socketDescriptor, 10 ) == -1 )
     return;
   for ( int i = 0; i < threadCount; i++ )
-    threadCreate ( i );
-  incomingConnection ( socketDescriptor );
+    threadPool.push_back ( std::thread ( &FilesServer::treat, this, i ) );
+  return;
+  // incomingConnection ( socketDescriptor );
 }
 
-void FilesServer::threadCreate ( int i ) {
-  threadPool.push_back ( std::thread ( &FilesServer::treat, this, i ) );
-  emit logMessage ( QStringLiteral ( "ceva orice" ) );
-  return; /* threadul principal returneaza */
+void FilesServer::threadCreate ( int i ) { /* threadul principal returneaza */
 }
 
 void *FilesServer::treat ( int arg ) {
@@ -50,7 +48,7 @@ void *FilesServer::treat ( int arg ) {
 
   struct sockaddr_in from;
   bzero ( &from, sizeof ( from ) );
-  printf ( "[thread]- %d - pornit...\n", arg );
+  emit logMessage ( QStringLiteral ( "[thread]- %1 - pornit" ).arg ( arg ) );
   fflush ( stdout );
 
   for ( ;; ) {
@@ -75,16 +73,15 @@ void FilesServer::procesare_mesaje_client ( int client, int idThread ) {
   int nr; // mesajul primit de trimis la client
 
   if ( read ( client, &nr, sizeof ( int ) ) <= 0 ) {
-    printf ( "[Thread %d]\n", idThread );
+    emit logMessage ( QStringLiteral ( "Eroare la read() de la client." ) );
     perror ( "Eroare la read() de la client.\n" );
   }
-
-  printf ( "[Thread %d]Mesajul a fost receptionat...%d\n", idThread, nr );
+  emit logMessage ( QStringLiteral ( "Mesajul %1 a fost primit" ).arg ( nr ) );
 }
 
-int FilesServer::incomingConnection ( int socketDescriptor ) {
+int FilesServer::incomingConnection ( ) {
   for ( ;; ) {
-    printf ( "[server]Asteptam la portul %d...\n", PORT );
+    emit logMessage ( QStringLiteral ( "Asteptam la portul %1" ).arg ( PORT ) );
     pause ( );
   }
 }
