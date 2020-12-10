@@ -1,5 +1,3 @@
 TEMPLATE = subdirs
 
-SUBDIRS = Client Server \
-    Server \
-    Client
+SUBDIRS = Client ServerV2

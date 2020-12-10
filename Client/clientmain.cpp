@@ -20,8 +20,12 @@ int ClientMain::connectToServer ( char *address, int port ) {
 }
 
 void ClientMain::trimiteMesaj ( ) {
-  int nr = 10;
-  if ( write ( socketDescriptor, &nr, sizeof ( int ) ) <= 0 ) {
+  char *mesaj = "Merge?";
+  int length = strlen ( mesaj );
+  if ( write ( socketDescriptor, &length, sizeof ( int ) ) <= 0 ) {
+    perror ( "[client]Eroare la write() spre server.\n" );
+  }
+  if ( write ( socketDescriptor, mesaj, length ) <= 0 ) {
     perror ( "[client]Eroare la write() spre server.\n" );
   }
 }
