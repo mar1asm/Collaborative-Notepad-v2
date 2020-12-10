@@ -2,6 +2,7 @@
 #define SERVERWORKER_H
 #include <QObject>
 #include <QReadWriteLock>
+#include <QThread>
 #include <QVector>
 #include <errno.h>
 #include <netinet/in.h>
@@ -15,26 +16,28 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
-class ServerWorker : public QObject {
+class ServerWorker : public QThread {
   Q_OBJECT
   Q_DISABLE_COPY ( ServerWorker )
+
 public:
-  explicit ServerWorker ( QObject *parent = nullptr );
+  ServerWorker ( int socketDescriptor );
 
 private:
+  void run ( ) override;
   int id;
-  void procesare_mesaje_client ( int client );
+  void procesare_mesaje_client ( );
   int socketDescriptor;
   void setare ( );
-  void *treat ( int );
   pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
   struct sockaddr_in fromSocket;
   int client;
-public slots:
-  void disconnectFromClient ( );
-private slots:
-  void receiveData ( );
+  // public slots:
+  //  void disconnectFromClient ( );
+  // private slots:
+  // void receiveData ( );
 signals:
+  void resultReady ( const QString &msg );
   void logMessage ( const QString &msg );
 };
 

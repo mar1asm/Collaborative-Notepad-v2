@@ -31,16 +31,20 @@ public:
   // void waitingForClients ( );
 
 protected:
-  int incomingConnection ( );
+  int incomingConnections ( );
 
 private:
   ~FilesServer ( );
-
-  const int threadCount = std::thread::hardware_concurrency ( );
+  const int m_idealThreadCount;
+  QVector< QThread * > m_availableThreads;
+  QVector< int > m_threadsLoad;
+  QVector< ServerWorker * > m_clients;
   struct sockaddr_in server;
-  int socketDescriptor;
-  std::vector< ServerWorker * > threadPool;
+  int serverSocketDescriptor;
+  int *clientSocketDescriptor;
   QObject serverWindow;
+public slots:
+  void handleResults ( const QString &msg ) { emit logMessage ( msg ); };
 signals:
   void logMessage ( const QString &msg );
   void stopAllClients ( );

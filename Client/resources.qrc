@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>internet-connection.png</file>
+    </qresource>
+</RCC>

@@ -8,16 +8,14 @@ serverMain::serverMain ( QObject *parent ) {
   this->clientSocketDescriptor = new int[ threadsCount ];
   this->available = new bool[ threadsCount ]; // nu merge asa{ true };
   this->threadPool = new std::thread[ threadsCount ];
-  for ( int i = 0; i < threadsCount; i++ ) {
-    available[ i ] = true;
+  for ( int i = 0; i < this->threadsCount; i++ ) {
+    this->available[ i ] = true;
   }
+  this->getFiles ( );
 }
 
 serverMain::~serverMain ( ) {
-  //  for ( QThread *singleThread : m_availableThreads ) {
-  //    singleThread->quit ( );
-  //    singleThread->wait ( );
-  //  }
+  // sa vad sa nu ramana ceva deschis
 }
 
 int serverMain::startServer ( ) {
@@ -96,12 +94,21 @@ int serverMain::processRequest ( int clientId ) {
 }
 
 int serverMain::threadCallback ( int clientId ) {
-  int error = 0;
-  while ( ! error ) {
+  int error = 1;
+  while ( error != -1 ) {
     // printf ( "surprinzator a ajuns aici\n" );
     error = processRequest ( clientId );
+    if ( ! error ) // daca primeste 0 inseamna ca comanda a fost quit si am
+           // terminat cu clientul asta
+      clientDisconnected ( clientId );
   }
   return 0;
+}
+
+void serverMain::clientDisconnected (
+    int clientId ) { // cum detectez daca clientul a inchis fara sa spuna?
+  available[ clientId ] = true;
+  close ( clientSocketDescriptor[ clientId ] );
 }
 
 int serverMain::waitForClients ( ) {
@@ -126,3 +133,23 @@ int serverMain::waitForClients ( ) {
 }
 
 void serverMain::stopServer ( ) { return; }
+
+void serverMain::getFiles ( ) {
+  // printf ( "am ajuns aici \n" );
+  if ( ! QDir ( "documents" ).exists ( ) ) {
+    // printf ( "nu exista \n" );
+    QDir ( ).mkdir ( "documents" );
+    return;
+  }
+
+  QDirIterator iterator ( "documents", QDirIterator::Subdirectories );
+  while ( iterator.hasNext ( ) ) {
+    QFile *refFile;
+    QFile file ( iterator.next ( ) ); // citesc fisierele
+    if ( file.open ( QIODevice::ReadOnly ) ) {
+      refFile = &file;
+      files.push_back ( refFile );
+      std::cout << files.back ( )->fileName ( ).toStdString ( ) << "\n";
+    }
+  }
+}

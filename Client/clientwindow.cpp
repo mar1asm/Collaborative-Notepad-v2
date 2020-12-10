@@ -13,12 +13,10 @@ int ClientWindow::setConnectionData ( int argc, char *argv[] ) {
   if ( argc != 3 ) {
     printf ( "[client] Sintaxa: %s <adresa_server> <port>\n", argv[ 0 ] );
     return -1;
-  }
+  } // to do sa pun sa citeasca dintr un fisier config
   int port = atoi ( argv[ 2 ] );
   this->port = port;
   this->address = argv[ 1 ];
-  if ( this->clientMain->connectToServer ( this->address, this->port ) )
-    return -1;
   return 0;
 }
 
@@ -133,3 +131,24 @@ void ClientWindow::on_actionPaste_triggered ( ) { ui->textEdit->paste ( ); }
 void ClientWindow::on_actionCut_triggered ( ) { ui->textEdit->cut ( ); }
 void ClientWindow::on_actionUndo_triggered ( ) { ui->textEdit->undo ( ); }
 void ClientWindow::on_actionRedo_triggered ( ) { ui->textEdit->redo ( ); }
+
+void ClientWindow::on_actionToggleConnection_triggered ( ) {
+  if ( connected ) {
+    this->clientMain->sendRequest ( "quit" );
+  } else {
+    if ( username == "" ) {
+      bool ok;
+      QString text = QInputDialog::getText (
+      this, tr ( "Set username" ), tr ( "Username:" ), QLineEdit::Normal,
+      QDir::home ( ).dirName ( ), &ok );
+      if ( ok && ! text.isEmpty ( ) )
+    this->username = text.toStdString ( );
+    }
+    if ( this->username == "" ) {
+      QMessageBox::critical ( this, tr ( "Error" ), tr ( "No username" ) );
+      return;
+    }
+    this->clientMain->setUsername ( username );
+    this->clientMain->connectToServer ( this->address, this->port );
+  }
+}

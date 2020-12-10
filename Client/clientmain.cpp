@@ -15,17 +15,28 @@ int ClientMain::connectToServer ( char *address, int port ) {
     perror ( "[client]Eroare la connect().\n" );
     return errno;
   }
-  trimiteMesaj ( );
+  char temp[] =
+      "username"; // c++ doesnt allow conversion from string literal to char
+  sendRequest ( 2, temp, ( char * ) this->username.data ( ) );
   return 0;
 }
 
-void ClientMain::trimiteMesaj ( ) {
-  char *mesaj = "Merge?";
-  int length = strlen ( mesaj );
+void ClientMain::sendRequest ( std::initializer_list< char * > msgs ) {
+  // nu credeam ca o sa ajung sa folosesc asta vreodata
+  for ( char *msg : msgs ) {
+    int requestLength = strlen ( ms )
+  }
+
+  int requestLength = strlen ( requestType );
+  int msgLength = strlen ( msg );
   if ( write ( socketDescriptor, &length, sizeof ( int ) ) <= 0 ) {
     perror ( "[client]Eroare la write() spre server.\n" );
   }
-  if ( write ( socketDescriptor, mesaj, length ) <= 0 ) {
+  if ( write ( socketDescriptor, msg, length ) <= 0 ) {
     perror ( "[client]Eroare la write() spre server.\n" );
   }
+}
+
+void ClientMain::setUsername ( std::string username ) {
+  this->username = username;
 }

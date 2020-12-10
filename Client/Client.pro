@@ -36,3 +36,6 @@ FORMS += \
         clientwindow.ui
 
 DISTFILES +=
+
+RESOURCES += \
+    resources.qrc

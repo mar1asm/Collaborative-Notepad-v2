@@ -78,6 +78,19 @@
    <addaction name="menuEdit"/>
    <addaction name="menuAccount"/>
   </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="separator"/>
+   <addaction name="actionToggleConnection"/>
+  </widget>
   <action name="actionNew">
    <property name="text">
     <string>New</string>
@@ -167,6 +180,19 @@
   <action name="actionOptions">
    <property name="text">
     <string>Options</string>
+   </property>
+  </action>
+  <action name="actionToggleConnection">
+   <property name="icon">
+    <iconset>
+     <normalon>:/icons/internet-connection.png</normalon>
+    </iconset>
+   </property>
+   <property name="text">
+    <string>Connect</string>
+   </property>
+   <property name="toolTip">
+    <string>connect to server</string>
    </property>
   </action>
  </widget>

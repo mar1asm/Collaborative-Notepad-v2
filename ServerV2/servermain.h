@@ -1,5 +1,8 @@
 #ifndef SERVERMAIN_H
 #define SERVERMAIN_H
+#include <QDir>
+#include <QDirIterator>
+#include <QFile>
 #include <QObject>
 #include <QReadWriteLock>
 #include <QString>
@@ -35,11 +38,7 @@ private:
   ~serverMain ( );
   struct sockaddr_in serverSocket;
   struct sockaddr_in fromSocket;
-  struct file {
-    std::string name;
-    std::string *lines;
-  };
-  std::vector< file > files;
+  std::vector< QFile * > files;
   std::thread *threadPool;
   int serverSocketDescriptor;
   int *clientSocketDescriptor;
@@ -51,6 +50,9 @@ private:
   int waitForClients ( );
   // helpers
   int getAvailable ( );
+  QString filesPath;
+  void getFiles ( );
+  void clientDisconnected ( int clientId );
 public slots:
   void handleResults ( const QString &msg ) { emit logMessage ( msg ); };
 

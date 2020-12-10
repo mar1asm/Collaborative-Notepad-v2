@@ -47,13 +47,19 @@ private slots:
 
   void on_actionFrom_PC_triggered ( );
 
+  void on_actionToggleConnection_triggered ( );
+
 private:
   Ui::ClientWindow *ui;
   QString currentFile = "";
   bool helper_isSaved ( );
+  bool connected = false;
   int port;
   char *address;
   ClientMain *clientMain;
+  std::string username = "";
+
+  void getUsername ( );
 };
 
 #endif // CLIENTWINDOW_H

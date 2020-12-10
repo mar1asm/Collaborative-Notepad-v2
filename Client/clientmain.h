@@ -1,11 +1,14 @@
 #ifndef CLIENTMAIN_H
 #define CLIENTMAIN_H
 
+#include <QDir>
+#include <QInputDialog>
 #include <QObject>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,13 +23,15 @@ class ClientMain : public QObject {
 public:
   explicit ClientMain ( QObject *parent = nullptr );
   int connectToServer ( char *address, int port );
+  void sendRequest ( std::initializer_list< char * > msgs );
+  void setUsername ( std::string username );
 
 private:
   int port;
   int socketDescriptor;
+  std::string username;
   struct sockaddr_in server;
   char *address;
-  void trimiteMesaj ( );
 };
 
 #endif // CLIENTMAIN_H
