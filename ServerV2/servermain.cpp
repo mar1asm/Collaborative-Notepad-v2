@@ -50,11 +50,17 @@ int serverMain::startServer ( ) {
   return 0;
 }
 
-int serverMain::getAvailable ( ) {
-  for ( int i = 0; i < this->threadsCount; i++ )
-    if ( available[ i ] )
-      return i;
-  return -1;
+void serverMain::stopServer ( ) {
+  for ( int i = 0; i < threadsCount; i++ ) {
+    if ( available[ i ] ) {
+      close ( clientSocketDescriptor[ i ] );
+      threadPool[ i ].join ( );
+    }
+    // sa trimit ceva mesaj sa stie
+    // clientul ca s a oprit serverul
+    // sa opresc si restul threadurilor
+  }
+  return;
 }
 
 void serverMain::spawnThread ( ) {
@@ -72,21 +78,34 @@ void serverMain::spawnThread ( ) {
   }
 }
 
-void serverMain::setUsername ( int clientId ) {
-  int length;
-  if ( read ( clientSocketDescriptor[ clientId ], &length, sizeof ( length ) ) <
+int serverMain::threadCallback ( int clientId ) {
+  int error = 0;
+  while ( ! error ) {
+    // printf ( "surprinzator a ajuns aici\n" );
+    error = processRequest ( clientId );
+  }
+  return 0;
+}
+
+int serverMain::waitForClients ( ) {
+  socklen_t length = sizeof ( fromSocket );
+  // int tempSocketDescriptor;
+
+  bzero ( &fromSocket, sizeof ( fromSocket ) );
+  int client;
+  // int client = malloc ( sizeof ( int ) );
+  if ( ( client = accept ( serverSocketDescriptor,
+               ( struct sockaddr * ) &fromSocket, &length ) ) <
        0 ) {
-    perror ( "eroare la read de la client" );
+    emit logMessage ( QStringLiteral (
+    "nu merge acceptul dar oare de ce nu merge daca l am setat bn " ) );
+    perror ( "[thread]Eroare la accept().\n" );
+    return -1;
   }
-
-  char msg[ length + 1 ];
-  if ( read ( clientSocketDescriptor[ clientId ], msg, length ) < 0 ) {
-    perror ( "eroare la read de la client" );
-  }
-  msg[ length ] = '\0';
-  clientsUsernames[ clientId ] = msg;
-
-  std::cout << clientsUsernames[ clientId ] << " s-a conectat\n";
+  // printf ( "s-a conectat clientul %d\n", client );
+  emit logMessage (
+      QStringLiteral ( "s-a conectat clientul %1\n" ).arg ( client ) );
+  return client;
 }
 
 int serverMain::processRequest ( int clientId ) {
@@ -114,20 +133,49 @@ int serverMain::processRequest ( int clientId ) {
   case -1:
     clientDisconnected ( clientId );
     return -1;
+  case 2:
+    sendListOfFiles ( clientId );
+    break;
+  case 3:
+    updateFile ( clientId );
+    break;
+  case 4:
+    createFile ( clientId );
+    break;
+  case 5:
+    disconnectClient ( clientId );
+    break;
+
   default:
     std::cout << "unknown comm";
   }
   return 0;
 }
 
-int serverMain::threadCallback ( int clientId ) {
-  int error = 0;
-  while ( ! error ) {
-    // printf ( "surprinzator a ajuns aici\n" );
-    error = processRequest ( clientId );
+void serverMain::setUsername ( int clientId ) {
+  int length;
+  if ( read ( clientSocketDescriptor[ clientId ], &length, sizeof ( length ) ) <
+       0 ) {
+    perror ( "eroare la read de la client" );
   }
-  return 0;
+
+  char msg[ length + 1 ];
+  if ( read ( clientSocketDescriptor[ clientId ], msg, length ) < 0 ) {
+    perror ( "eroare la read de la client" );
+  }
+  msg[ length ] = '\0';
+  clientsUsernames[ clientId ] = msg;
+
+  std::cout << clientsUsernames[ clientId ] << " s-a conectat\n";
 }
+
+void serverMain::sendListOfFiles ( int clientId ) {}
+
+void serverMain::updateFile ( int clientId ) {}
+
+void serverMain::createFile ( int clientId ) {}
+
+void serverMain::disconnectClient ( int clientId ) {}
 
 void serverMain::clientDisconnected (
     int clientId ) { // cum detectez daca clientul a inchis fara sa spuna?
@@ -135,38 +183,6 @@ void serverMain::clientDisconnected (
   std::cout << clientsUsernames[ clientId ] << " s-a deconectat\n";
   clientsUsernames[ clientId ] = "";
   close ( clientSocketDescriptor[ clientId ] );
-}
-
-int serverMain::waitForClients ( ) {
-  socklen_t length = sizeof ( fromSocket );
-  // int tempSocketDescriptor;
-
-  bzero ( &fromSocket, sizeof ( fromSocket ) );
-  int client;
-  // int client = malloc ( sizeof ( int ) );
-  if ( ( client = accept ( serverSocketDescriptor,
-               ( struct sockaddr * ) &fromSocket, &length ) ) <
-       0 ) {
-    emit logMessage ( QStringLiteral (
-    "nu merge acceptul dar oare de ce nu merge daca l am setat bn " ) );
-    perror ( "[thread]Eroare la accept().\n" );
-    return -1;
-  }
-  // printf ( "s-a conectat clientul %d\n", client );
-  emit logMessage (
-      QStringLiteral ( "s-a conectat clientul %1\n" ).arg ( client ) );
-  return client;
-}
-
-void serverMain::stopServer ( ) {
-  for ( int i = 0; i < threadsCount; i++ ) {
-    if ( available[ i ] )
-      close ( clientSocketDescriptor[ i ] );
-    // sa trimit ceva mesaj sa stie
-    // clientul ca s a oprit serverul
-    // sa opresc si restul threadurilor
-  }
-  return;
 }
 
 void serverMain::getFiles ( ) {
@@ -186,4 +202,11 @@ void serverMain::getFiles ( ) {
       files.push_back ( refFile );
     }
   }
+}
+
+int serverMain::getAvailable ( ) {
+  for ( int i = 0; i < this->threadsCount; i++ )
+    if ( available[ i ] )
+      return i;
+  return -1;
 }

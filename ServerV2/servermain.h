@@ -28,7 +28,8 @@ class QThread;
 class serverMain : public QObject {
   static const int PORT = 2001;
   const std::unordered_map< std::string, int > requestsNumbers {
-      { "username", 1 }, { "quit", -1 } };
+      { "username", 1 }, { "quit", -1 }, { "list", 2 },
+      { "update", 3 },	 { "new", 4 },	 { "idle", 5 } };
   Q_OBJECT
   Q_DISABLE_COPY ( serverMain )
 public:
@@ -39,24 +40,38 @@ public:
 
 private:
   ~serverMain ( );
+  QObject serverWindow;
+
+  // communication
   struct sockaddr_in serverSocket;
   struct sockaddr_in fromSocket;
-  std::vector< QFile * > files;
-  std::thread *threadPool;
   int serverSocketDescriptor;
   int *clientSocketDescriptor;
-  std::string *clientsUsernames;
-  void setUsername ( int clientId );
-  bool *available;
+
+  // workers
+
   int threadsCount;
-  QObject serverWindow;
-  int processRequest ( int clientId );
+  std::thread *threadPool;
   int threadCallback ( int clientId );
   int waitForClients ( );
-  int getAvailable ( );
+  int processRequest ( int clientId );
+
+  std::vector< QFile * > files;
   QString filesPath;
-  void getFiles ( );
+
+  // requests
+  void setUsername ( int clientId );
   void clientDisconnected ( int clientId );
+  void sendListOfFiles ( int clientId );
+  void updateFile ( int clientId );
+  void createFile ( int clientId );
+  void disconnectClient ( int clientId );
+
+  // aux
+  int getAvailable ( );
+  bool *available;
+  void getFiles ( );
+  std::string *clientsUsernames;
 
 public slots:
   void handleResults ( const QString &msg ) { emit logMessage ( msg ); };

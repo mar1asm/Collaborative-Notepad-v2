@@ -89,7 +89,9 @@ void ClientWindow::on_actionNew_triggered ( ) {
   setWindowTitle ( "New file" );
 }
 
-void ClientWindow::on_actionFrom_server_triggered ( ) {}
+void ClientWindow::on_actionFrom_server_triggered ( ) {
+  clientMain->sendRequest ( { "list" } );
+}
 
 void ClientWindow::on_actionFrom_PC_triggered ( ) {
   QString fileName = QFileDialog::getOpenFileName ( this, "Open file" );
