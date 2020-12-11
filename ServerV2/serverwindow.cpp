@@ -10,7 +10,10 @@ ServerWindow::ServerWindow ( QWidget *parent )
         &ServerWindow::logMessage );
 }
 
-ServerWindow::~ServerWindow ( ) { delete ui; }
+ServerWindow::~ServerWindow ( ) {
+  servermain->stopServer ( );
+  delete ui;
+}
 
 void ServerWindow::on_toggleServer_clicked ( ) {
   if ( isRunning ) {

@@ -184,9 +184,9 @@
   </action>
   <action name="actionToggleConnection">
    <property name="icon">
-    <iconset>
-     <normalon>:/icons/internet-connection.png</normalon>
-    </iconset>
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/connect.png</normaloff>
+     <normalon>:/icons/internet-connection.png</normalon>:/icons/connect.png</iconset>
    </property>
    <property name="text">
     <string>Connect</string>
@@ -197,6 +197,8 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

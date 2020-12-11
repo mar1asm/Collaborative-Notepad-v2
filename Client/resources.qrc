@@ -1,5 +1,9 @@
 <RCC>
     <qresource prefix="/icons">
-        <file>internet-connection.png</file>
+        <file>disconnect.png</file>
+        <file>connect.png</file>
+    </qresource>
+    <qresource prefix="/files">
+        <file>config</file>
     </qresource>
 </RCC>

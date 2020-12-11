@@ -11,6 +11,9 @@
 #include <QTextStream>
 #include <QtPrintSupport/QPrintDialog>
 #include <QtPrintSupport/QPrinter>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 namespace Ui {
 class ClientWindow;
@@ -21,7 +24,7 @@ class ClientWindow : public QMainWindow {
 
 public:
   explicit ClientWindow ( QWidget *parent = 0 );
-  int setConnectionData ( int argc, char *argv[] );
+  int setConnectionData ( );
   ~ClientWindow ( );
 
 private slots:

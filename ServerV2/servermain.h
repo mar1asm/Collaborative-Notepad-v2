@@ -20,12 +20,15 @@
 #include <sys/types.h>
 #include <thread>
 #include <unistd.h>
+#include <unordered_map>
 #include <vector>
 class ServerWorker;
 class QThread;
 
 class serverMain : public QObject {
   static const int PORT = 2001;
+  const std::unordered_map< std::string, int > requestsNumbers {
+      { "username", 1 }, { "quit", -1 } };
   Q_OBJECT
   Q_DISABLE_COPY ( serverMain )
 public:
@@ -42,17 +45,19 @@ private:
   std::thread *threadPool;
   int serverSocketDescriptor;
   int *clientSocketDescriptor;
+  std::string *clientsUsernames;
+  void setUsername ( int clientId );
   bool *available;
   int threadsCount;
   QObject serverWindow;
   int processRequest ( int clientId );
   int threadCallback ( int clientId );
   int waitForClients ( );
-  // helpers
   int getAvailable ( );
   QString filesPath;
   void getFiles ( );
   void clientDisconnected ( int clientId );
+
 public slots:
   void handleResults ( const QString &msg ) { emit logMessage ( msg ); };
 

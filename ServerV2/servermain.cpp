@@ -8,6 +8,7 @@ serverMain::serverMain ( QObject *parent ) {
   this->clientSocketDescriptor = new int[ threadsCount ];
   this->available = new bool[ threadsCount ]; // nu merge asa{ true };
   this->threadPool = new std::thread[ threadsCount ];
+  this->clientsUsernames = new std::string[ threadsCount ];
   for ( int i = 0; i < this->threadsCount; i++ ) {
     this->available[ i ] = true;
   }
@@ -71,6 +72,23 @@ void serverMain::spawnThread ( ) {
   }
 }
 
+void serverMain::setUsername ( int clientId ) {
+  int length;
+  if ( read ( clientSocketDescriptor[ clientId ], &length, sizeof ( length ) ) <
+       0 ) {
+    perror ( "eroare la read de la client" );
+  }
+
+  char msg[ length + 1 ];
+  if ( read ( clientSocketDescriptor[ clientId ], msg, length ) < 0 ) {
+    perror ( "eroare la read de la client" );
+  }
+  msg[ length ] = '\0';
+  clientsUsernames[ clientId ] = msg;
+
+  std::cout << clientsUsernames[ clientId ] << " s-a conectat\n";
+}
+
 int serverMain::processRequest ( int clientId ) {
   int length;
   if ( read ( clientSocketDescriptor[ clientId ], &length, sizeof ( length ) ) <
@@ -79,28 +97,34 @@ int serverMain::processRequest ( int clientId ) {
     return -1;
   }
 
-  printf ( "clientul %d a trimis %d\n", clientId, length );
-
   char msg[ length + 1 ];
   if ( read ( clientSocketDescriptor[ clientId ], msg, length ) < 0 ) {
     perror ( "eroare la read de la client" );
     return -1;
   }
 
-  printf ( "clientul %d a trimis %s\n", clientId, msg );
-  // procesare efectiva comanda
+  msg[ length ] = '\0';
 
+  // ca sa nu am 1000 de if-else-uri
+
+  switch ( requestsNumbers.at ( msg ) ) {
+  case 1:
+    setUsername ( clientId );
+    break;
+  case -1:
+    clientDisconnected ( clientId );
+    return -1;
+  default:
+    std::cout << "unknown comm";
+  }
   return 0;
 }
 
 int serverMain::threadCallback ( int clientId ) {
-  int error = 1;
-  while ( error != -1 ) {
+  int error = 0;
+  while ( ! error ) {
     // printf ( "surprinzator a ajuns aici\n" );
     error = processRequest ( clientId );
-    if ( ! error ) // daca primeste 0 inseamna ca comanda a fost quit si am
-           // terminat cu clientul asta
-      clientDisconnected ( clientId );
   }
   return 0;
 }
@@ -108,6 +132,8 @@ int serverMain::threadCallback ( int clientId ) {
 void serverMain::clientDisconnected (
     int clientId ) { // cum detectez daca clientul a inchis fara sa spuna?
   available[ clientId ] = true;
+  std::cout << clientsUsernames[ clientId ] << " s-a deconectat\n";
+  clientsUsernames[ clientId ] = "";
   close ( clientSocketDescriptor[ clientId ] );
 }
 
@@ -126,13 +152,22 @@ int serverMain::waitForClients ( ) {
     perror ( "[thread]Eroare la accept().\n" );
     return -1;
   }
-  printf ( "s-a conectat clientul %d\n", client );
+  // printf ( "s-a conectat clientul %d\n", client );
   emit logMessage (
       QStringLiteral ( "s-a conectat clientul %1\n" ).arg ( client ) );
   return client;
 }
 
-void serverMain::stopServer ( ) { return; }
+void serverMain::stopServer ( ) {
+  for ( int i = 0; i < threadsCount; i++ ) {
+    if ( available[ i ] )
+      close ( clientSocketDescriptor[ i ] );
+    // sa trimit ceva mesaj sa stie
+    // clientul ca s a oprit serverul
+    // sa opresc si restul threadurilor
+  }
+  return;
+}
 
 void serverMain::getFiles ( ) {
   // printf ( "am ajuns aici \n" );
@@ -149,7 +184,6 @@ void serverMain::getFiles ( ) {
     if ( file.open ( QIODevice::ReadOnly ) ) {
       refFile = &file;
       files.push_back ( refFile );
-      std::cout << files.back ( )->fileName ( ).toStdString ( ) << "\n";
     }
   }
 }

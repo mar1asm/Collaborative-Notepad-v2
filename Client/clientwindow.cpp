@@ -9,18 +9,38 @@ ClientWindow::ClientWindow ( QWidget *parent )
   clientMain = new ClientMain ( this );
 }
 
-int ClientWindow::setConnectionData ( int argc, char *argv[] ) {
-  if ( argc != 3 ) {
-    printf ( "[client] Sintaxa: %s <adresa_server> <port>\n", argv[ 0 ] );
+int ClientWindow::setConnectionData ( ) {
+  if ( ! QFile::exists ( ":/files/config" ) ) {
+    QMessageBox::critical ( this, tr ( "Error" ),
+                tr ( "missing config file" ) );
     return -1;
-  } // to do sa pun sa citeasca dintr un fisier config
-  int port = atoi ( argv[ 2 ] );
-  this->port = port;
-  this->address = argv[ 1 ];
+  }
+
+  QFile file ( ":/files/config" );
+  if ( ! file.open ( QIODevice::ReadOnly | QIODevice::Text ) ) {
+    QMessageBox::critical ( this, tr ( "Error" ),
+                tr ( "cant open config file" ) );
+    return -1;
+  }
+  QString data;
+  data = file.readAll ( );
+  std::stringstream data2 ( data.toStdString ( ) ); // workaround
+  std::string line;
+  data2 >> line;
+  int addressLength = line.size ( );
+  address = new char[ addressLength + 1 ];
+  strcpy ( address, line.data ( ) );
+  address[ addressLength ] = '\0';
+  data2 >> line;
+  port = atoi ( line.data ( ) );
   return 0;
 }
 
-ClientWindow::~ClientWindow ( ) { delete ui; }
+ClientWindow::~ClientWindow ( ) {
+  if ( connected )
+    this->clientMain->sendRequest ( { "quit" } );
+  delete ui;
+}
 
 bool ClientWindow::helper_isSaved ( ) {
   QString currentText = ui->textEdit->toPlainText ( );
@@ -134,7 +154,12 @@ void ClientWindow::on_actionRedo_triggered ( ) { ui->textEdit->redo ( ); }
 
 void ClientWindow::on_actionToggleConnection_triggered ( ) {
   if ( connected ) {
-    this->clientMain->sendRequest ( "quit" );
+    this->connected = false;
+    this->ui->actionToggleConnection->setIcon ( QIcon ( ":/icons/connect" ) );
+    this->clientMain->sendRequest ( { "quit" } );
+    this->ui->actionFrom_server->setDisabled ( true );
+    QMessageBox::information ( this, tr ( "Server" ),
+                   tr ( "Disconnected from server" ) );
   } else {
     if ( username == "" ) {
       bool ok;
@@ -144,11 +169,25 @@ void ClientWindow::on_actionToggleConnection_triggered ( ) {
       if ( ok && ! text.isEmpty ( ) )
     this->username = text.toStdString ( );
     }
+
     if ( this->username == "" ) {
       QMessageBox::critical ( this, tr ( "Error" ), tr ( "No username" ) );
       return;
     }
     this->clientMain->setUsername ( username );
-    this->clientMain->connectToServer ( this->address, this->port );
+    if ( this->clientMain->connectToServer ( this->address, this->port ) ) {
+      if ( this->username == "" ) {
+    QMessageBox::critical ( this, tr ( "Error" ),
+                tr ( "Cannot connect to server" ) );
+    return;
+      }
+    } else {
+      QMessageBox::information ( this, tr ( "Server" ),
+                 tr ( "Connected to server" ) );
+      this->connected = true;
+      this->ui->actionToggleConnection->setIcon (
+      QIcon ( ":/icons/disconnect" ) );
+      this->ui->actionFrom_server->setEnabled ( true );
+    }
   }
 }
