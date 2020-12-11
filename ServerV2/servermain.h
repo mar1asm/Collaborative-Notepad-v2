@@ -10,6 +10,7 @@
 #include <QVector>
 #include <errno.h>
 #include <iostream>
+#include <mutex>
 #include <netinet/in.h>
 #include <pthread.h>
 #include <signal.h>
@@ -22,6 +23,8 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <vector>
+
+// todo: sterge bibliotecile inutile
 class ServerWorker;
 class QThread;
 
@@ -35,8 +38,8 @@ class serverMain : public QObject {
 public:
   explicit serverMain ( QObject *parent = nullptr );
   int startServer ( );
-  void spawnThread ( );
   void stopServer ( );
+  void spawnSpawningThread ( );
 
 private:
   ~serverMain ( );
@@ -50,11 +53,13 @@ private:
 
   // workers
 
+  std::mutex lock; // aici e problema
   int threadsCount;
   std::thread *threadPool;
   int threadCallback ( int clientId );
   int waitForClients ( );
   int processRequest ( int clientId );
+  void spawnThreads ( );
 
   std::vector< QFile * > files;
   QString filesPath;

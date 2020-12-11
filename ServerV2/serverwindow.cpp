@@ -29,7 +29,7 @@ void ServerWindow::on_toggleServer_clicked ( ) {
     }
     isRunning = true;
     ui->toggleServer->setText ( tr ( "Stop Server" ) );
-    servermain->spawnThread ( );
+    servermain->spawnSpawningThread ( );
   }
 }
 

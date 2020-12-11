@@ -21,16 +21,16 @@ int ClientMain::connectToServer ( char *address, int port ) {
   return 0;
 }
 
+void ClientMain::spawnListeningThread ( ) {
+  listeningThread = new std::thread ( &ClientMain::threadCallback, this );
+  listeningThread->detach ( );
+}
+
 int ClientMain::threadCallback ( ) {
   int error = 0;
   while ( ! error ) {
     error = listen ( );
   }
-}
-
-void ClientMain::spawnListeningThread ( ) {
-  listeningThread = new std::thread ( &ClientMain::threadCallback, this );
-  listeningThread->detach ( );
 }
 
 int ClientMain::listen ( ) {
