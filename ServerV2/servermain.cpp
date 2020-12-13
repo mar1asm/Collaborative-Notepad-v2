@@ -55,7 +55,10 @@ void serverMain::stopServer ( ) {
   for ( int i = 0; i < threadsCount; i++ ) {
     safeShutdown = true;
     // shutdown(Listen_fd, SHUT_RDWR);
-    if ( available[ i ] ) {
+    if ( available[ i ] ) { // aici ceva sa trimita cum trebuie. prob problema e
+                // ca intai ii face available [clientId]= false
+                // atunci cand da fail readul. dar prob da fail
+                // readul pentru ca e inchid deja socketu
       sendMessage ( clientSocketDescriptor[ i ], { "serverClosed" } );
       shutdown ( clientSocketDescriptor[ i ], SHUT_RDWR );
       shutdown ( serverSocketDescriptor, SHUT_RDWR );
@@ -141,22 +144,13 @@ void serverMain::sendMessage ( int clientId,
 }
 
 int serverMain::processRequest ( int clientId ) {
-  int length;
-  if ( read ( clientSocketDescriptor[ clientId ], &length, sizeof ( length ) ) <
-       0 ) {
-    perror ( "eroare la read de la client" );
+
+  std::string msg;
+  msg = readMessage ( clientSocketDescriptor[ clientId ] );
+  if ( msg.size ( ) == 0 ) {
     return -1;
   }
-
-  char msg[ length + 1 ];
-  if ( read ( clientSocketDescriptor[ clientId ], msg, length ) < 0 ) {
-    perror ( "eroare la read de la client" );
-    return -1;
-  }
-
-  msg[ length ] = '\0';
-  std::cout << "Am primit: " << msg << "\n";
-
+  std::cout << msg << "\n";
   // ca sa nu am 1000 de if-else-uri
 
   switch ( requestsNumbers.at ( msg ) ) {
@@ -188,25 +182,23 @@ int serverMain::processRequest ( int clientId ) {
 
 void serverMain::setUsername ( int clientId ) {
   int length;
-  if ( read ( clientSocketDescriptor[ clientId ], &length, sizeof ( length ) ) <
-       0 ) {
-    perror ( "eroare la read de la client" );
+  std::string msg = readMessage ( clientSocketDescriptor[ clientId ] );
+  if ( msg.size ( ) == 0 ) {
     emit logMessage ( QStringLiteral ( "eroare la read de la client" ) );
+    perror ( "eroare la read de la client" );
+    return;
   }
 
-  char msg[ length + 1 ];
-  if ( read ( clientSocketDescriptor[ clientId ], msg, length ) < 0 ) {
-    perror ( "eroare la read de la client" );
-    emit logMessage ( QStringLiteral ( "eroare la read de la client" ) );
+  if ( msg == "quit" ) {
+    clientDisconnected ( clientId );
+    return;
   }
-  msg[ length ] = '\0';
+
   clientsUsernames[ clientId ] = msg;
 
   std::cout << clientsUsernames[ clientId ] << " s-a conectat\n";
-  std::string smsg;
-  smsg += clientsUsernames[ clientId ];
-  smsg += " s-a conectat";
-  emit logMessage ( QString ( smsg.data ( ) ) );
+  msg += " s-a conectat!";
+  emit logMessage ( QString ( msg.data ( ) ) );
 }
 
 void serverMain::sendListOfFiles ( int clientId ) {
@@ -214,11 +206,14 @@ void serverMain::sendListOfFiles ( int clientId ) {
   this->sendMessage ( clientId, { "list" } );
   this->sendMessage ( clientId, { std::to_string ( numberOfFiles ).data ( ) },
               false );
-
+  int fileIndex = 0;
   for ( std::string file : fileNames ) {
     // QFileInfo fi ( *file );
     // std::cout << fi.fileName ( ).toStdString ( ) << "\n";
     this->sendMessage ( clientId, { file } );
+    this->sendMessage (
+    clientId, { std::to_string ( nOfUsersFile[ fileIndex ] ) }, false );
+    fileIndex++;
     //}
   }
 }
@@ -250,6 +245,7 @@ void serverMain::getFiles ( ) {
   }
 
   QDirIterator iterator ( "documents", QDirIterator::Subdirectories );
+  int fileIndex = 0;
   while ( iterator.hasNext ( ) ) {
     QFile *refFile;
     QFile file ( iterator.next ( ) ); // citesc fisierele
@@ -258,7 +254,10 @@ void serverMain::getFiles ( ) {
       files.push_back ( refFile ); //??????????????/
       QFileInfo fileInfo ( file );
       fileNames.push_back ( fileInfo.fileName ( ).toStdString ( ) );
+      nOfUsersFile.push_back ( 0 );
+      clientsUsingFile.push_back ( std::make_pair ( -1, -1 ) );
     }
+    fileIndex++;
   }
 }
 
@@ -267,4 +266,40 @@ int serverMain::getAvailable ( ) {
     if ( available[ i ] )
       return i;
   return -1;
+}
+
+std::string serverMain::readMessage ( int clientDescriptor, bool hasLength ) {
+  if ( hasLength ) {
+    int length;
+    int readError = read ( clientDescriptor, &length, sizeof ( length ) );
+    if ( readError < 0 ) {
+      perror ( "[Server] Erroare la read de la client" );
+      return "";
+    }
+    if ( readError == 0 ) {
+      return "quit";
+    }
+    char msg[ length + 1 ];
+    readError = read ( clientDescriptor, msg, length );
+    if ( readError < 0 ) {
+      perror ( "[Server] Erroare la read de la client" );
+      return "";
+    }
+    if ( readError == 0 ) {
+      return "quit";
+    }
+    msg[ length ] = '\0';
+    return msg;
+  }
+  int msg;
+  int readError = read ( clientDescriptor, &msg, sizeof ( msg ) );
+  if ( readError < 0 ) {
+    perror ( "[Server] Erroare la read de la client" );
+    return "";
+  }
+  if ( readError == 0 ) {
+    return "quit";
+  }
+
+  return std::to_string ( msg );
 }

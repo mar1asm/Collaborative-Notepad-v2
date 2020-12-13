@@ -11,6 +11,8 @@ ClientWindow::ClientWindow ( QWidget *parent )
         &ClientWindow::on_serverClosed );
   connect ( clientMain, &ClientMain::logMessage, this,
         &ClientWindow::sendMessage );
+  connect ( clientMain, &ClientMain::openDialog, this,
+        &ClientWindow::on_openDialog );
 }
 
 int ClientWindow::setConnectionData ( ) {
@@ -200,8 +202,7 @@ void ClientWindow::on_actionToggleConnection_triggered ( ) {
 }
 
 void ClientWindow::on_serverClosed ( ) {
-  std::cout << "am ajuns aici"
-        << "\n";
+
   this->connected = false;
   this->ui->actionToggleConnection->setIcon ( QIcon ( ":/icons/connect" ) );
   this->ui->actionFrom_server->setDisabled ( true );
@@ -220,4 +221,12 @@ void ClientWindow::sendMessage ( std::string type, std::string sub,
                 tr ( message.data ( ) ) );
   else
     QMessageBox::warning ( this, tr ( sub.data ( ) ), tr ( message.data ( ) ) );
+}
+
+void ClientWindow::on_openDialog ( QVector< QPair< QString, int > > files ) {
+  std::cout << "am ajuns aici"
+        << "\n";
+  filesListDialog = new FilesListDialog ( this );
+  filesListDialog->setItems ( files );
+  filesListDialog->show ( );
 }

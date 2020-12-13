@@ -88,7 +88,7 @@ void ClientMain::listFiles ( ) {
     perror ( "[client]Eroare la read() de la server.\n" );
     return;
   }
-  std::vector< std::string > files;
+  QVector< QPair< QString, int > > files;
   for ( int i = 0; i < numberOfFiles; i++ ) {
     int filenameLength;
     if ( read ( socketDescriptor, &filenameLength, sizeof ( filenameLength ) ) <
@@ -104,11 +104,23 @@ void ClientMain::listFiles ( ) {
       return;
     }
 
+    int clientsConnected;
+
+    if ( read ( socketDescriptor, &clientsConnected,
+        sizeof ( clientsConnected ) ) < 0 ) {
+      perror ( "[client]Eroare la read() de la server.\n" );
+      return;
+    }
+
     // std::cout << file << "\n";
-    files.push_back ( file );
+    files.push_back ( qMakePair ( QString ( file ), clientsConnected ) );
   }
-  ListOfFilesWidget *listWidget;
-  listWidget = new ListOfFilesWidget;
+
+  emit openDialog ( files );
+  // ListOfFilesWidget *listWidget;
+  // listWidget = new ListOfFilesWidget;
+  // listWidget->setColumnCount ( 1 );
+  // listWidget->setRowCount ( numberOfFiles );
 }
 
 void ClientMain::closeConnection ( ) {

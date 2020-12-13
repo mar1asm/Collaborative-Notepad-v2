@@ -2,11 +2,13 @@
 #define CLIENTWINDOW_H
 
 #include "clientmain.h"
+#include "fileslistdialog.h"
 
 #include <QFile>
 #include <QFileDialog>
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QPair>
 #include <QShortcut>
 #include <QTextStream>
 #include <QtPrintSupport/QPrintDialog>
@@ -56,6 +58,8 @@ private slots:
 
   void sendMessage ( std::string type, std::string sub, std::string message );
 
+  void on_openDialog ( QVector< QPair< QString, int > > files );
+
 private:
   Ui::ClientWindow *ui;
   QString currentFile = "";
@@ -65,6 +69,8 @@ private:
   char *address;
   ClientMain *clientMain;
   std::string username = "";
+
+  FilesListDialog *filesListDialog;
 
   void getUsername ( );
 };

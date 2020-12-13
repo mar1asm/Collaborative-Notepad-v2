@@ -84,6 +84,13 @@ private:
   bool *available;
   void getFiles ( );
   std::string *clientsUsernames;
+  std::vector< int > nOfUsersFile; // cati clienti editeaza un fisier
+  std::vector< std::pair< int, int > >
+      clientsUsingFile; // ce clienti editeaza fisierele
+
+  std::string readMessage (
+      int clientDescriptor,
+      bool hasLength = true ); // am facut functia asta sa pot trata erorile
 
 public slots:
   void handleResults ( const QString &msg ) { emit logMessage ( msg ); };

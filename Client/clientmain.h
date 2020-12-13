@@ -8,7 +8,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <iostream>
-#include <listoffileswidget.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdarg.h>
@@ -54,6 +53,7 @@ private:
 signals:
   void serverClosed ( );
   void logMessage ( std::string type, std::string sub, std::string message );
+  void openDialog ( QVector< QPair< QString, int > > files );
 };
 
 #endif // CLIENTMAIN_H
