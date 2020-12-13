@@ -60,6 +60,8 @@ private slots:
 
   void on_openDialog ( QVector< QPair< QString, int > > files );
 
+  void on_closeDialog ( );
+
 private:
   Ui::ClientWindow *ui;
   QString currentFile = "";

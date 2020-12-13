@@ -13,6 +13,8 @@ ClientWindow::ClientWindow ( QWidget *parent )
         &ClientWindow::sendMessage );
   connect ( clientMain, &ClientMain::openDialog, this,
         &ClientWindow::on_openDialog );
+  connect ( clientMain, &ClientMain::closeDialog, this,
+        &ClientWindow::on_closeDialog );
 }
 
 int ClientWindow::setConnectionData ( ) {
@@ -227,6 +229,17 @@ void ClientWindow::on_openDialog ( QVector< QPair< QString, int > > files ) {
   std::cout << "am ajuns aici"
         << "\n";
   filesListDialog = new FilesListDialog ( this );
+  connect ( filesListDialog, &FilesListDialog::refreshListOfFiles, clientMain,
+        &ClientMain::on_refreshFiles );
+  connect ( filesListDialog, &FilesListDialog::deleteFile, clientMain,
+        &ClientMain::on_deleteFile );
+  connect ( filesListDialog, &FilesListDialog::openFile, clientMain,
+        &ClientMain::on_OpenFile );
   filesListDialog->setItems ( files );
   filesListDialog->show ( );
+}
+
+void ClientWindow::on_closeDialog ( ) {
+  delete filesListDialog;
+  filesListDialog = nullptr;
 }

@@ -144,3 +144,15 @@ void ClientMain::sendRequest ( std::initializer_list< std::string > msgs ) {
 void ClientMain::setUsername ( std::string username ) {
   this->username = username;
 }
+
+void ClientMain::on_refreshFiles ( ) {}
+
+void ClientMain::on_OpenFile ( int fileId, QString filename ) {
+  std::cout << fileId << " " << filename.toStdString ( ) << "\n";
+  emit closeDialog ( );
+}
+
+void ClientMain::on_deleteFile ( int fileId, QString filename ) {
+  std::cout << fileId << " " << filename.toStdString ( ) << "\n";
+  emit closeDialog ( );
+}

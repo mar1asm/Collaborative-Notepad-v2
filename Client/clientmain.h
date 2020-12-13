@@ -50,10 +50,16 @@ private:
   int threadCallback ( );
   void listFiles ( );
   void processServerMessage ( char *message );
+
+public slots:
+  void on_refreshFiles ( );
+  void on_deleteFile ( int fileId, QString filename );
+  void on_OpenFile ( int fileId, QString filename );
 signals:
   void serverClosed ( );
   void logMessage ( std::string type, std::string sub, std::string message );
   void openDialog ( QVector< QPair< QString, int > > files );
+  void closeDialog ( );
 };
 
 #endif // CLIENTMAIN_H
