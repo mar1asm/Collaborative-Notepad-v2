@@ -7,19 +7,23 @@ ClientWindow::ClientWindow ( QWidget *parent )
   this->setCentralWidget ( ui->textEdit );
   setWindowTitle ( "New file" );
   clientMain = new ClientMain ( this );
+  connect ( clientMain, &ClientMain::serverClosed, this,
+        &ClientWindow::on_serverClosed );
+  connect ( clientMain, &ClientMain::logMessage, this,
+        &ClientWindow::sendMessage );
 }
 
 int ClientWindow::setConnectionData ( ) {
   if ( ! QFile::exists ( ":/files/config" ) ) {
-    QMessageBox::critical ( this, tr ( "Error" ),
-                tr ( "missing config file" ) );
+    sendMessage ( "critical", "Error", "Cannot find config file " );
     return -1;
   }
 
   QFile file ( ":/files/config" );
   if ( ! file.open ( QIODevice::ReadOnly | QIODevice::Text ) ) {
-    QMessageBox::critical ( this, tr ( "Error" ),
-                tr ( "cant open config file" ) );
+    sendMessage ( "critical", "Error",
+          "Cannot open config file : " +
+              file.errorString ( ).toStdString ( ) );
     return -1;
   }
   QString data;
@@ -52,8 +56,9 @@ bool ClientWindow::helper_isSaved ( ) {
   }
   QFile savedFile ( currentFile );
   if ( ! savedFile.open ( QFile::ReadOnly | QFile ::Text ) ) {
-    QMessageBox::warning ( this, "Warning",
-               "Cannot open file : " + savedFile.errorString ( ) );
+    sendMessage ( "warning", "Warning",
+          "Cannot open file : " +
+              savedFile.errorString ( ).toStdString ( ) );
     return false;
   }
   QTextStream in ( &savedFile );
@@ -100,8 +105,9 @@ void ClientWindow::on_actionFrom_PC_triggered ( ) {
   QFile file ( fileName );
   currentFile = fileName;
   if ( ! file.open ( QIODevice::ReadOnly | QFile ::Text ) ) {
-    QMessageBox::warning ( this, "Warning",
-               "Cannot open file : " + file.errorString ( ) );
+    sendMessage ( "warning", "Warning",
+          "Cannot open file : " +
+              file.errorString ( ).toStdString ( ) );
     return;
   }
   setWindowTitle ( fileName );
@@ -118,8 +124,9 @@ void ClientWindow::on_actionSave_triggered ( ) {
   }
   QFile file ( currentFile );
   if ( ! file.open ( QFile::WriteOnly | QFile ::Text ) ) {
-    QMessageBox::warning ( this, "Warning",
-               "Cannot save file : " + file.errorString ( ) );
+    sendMessage ( "warning", "Warning",
+          "Cannot save file : " +
+              file.errorString ( ).toStdString ( ) );
     return;
   }
   QTextStream out ( &file );
@@ -134,8 +141,9 @@ void ClientWindow::on_actionSave_as_triggered ( ) {
     return;
   QFile file ( fileName );
   if ( ! file.open ( QFile::WriteOnly | QFile ::Text ) ) {
-    QMessageBox::warning ( this, "Warning",
-               "Cannot save file : " + file.errorString ( ) );
+    sendMessage ( "warning", "Warning",
+          "Cannot save file : " +
+              file.errorString ( ).toStdString ( ) );
     return;
   }
   currentFile = fileName;
@@ -160,8 +168,7 @@ void ClientWindow::on_actionToggleConnection_triggered ( ) {
     this->ui->actionToggleConnection->setIcon ( QIcon ( ":/icons/connect" ) );
     this->clientMain->sendRequest ( { "quit" } );
     this->ui->actionFrom_server->setDisabled ( true );
-    QMessageBox::information ( this, tr ( "Server" ),
-                   tr ( "Disconnected from server" ) );
+    sendMessage ( "info", "server", "Disconnected from server" );
   } else {
     if ( username == "" ) {
       bool ok;
@@ -173,23 +180,44 @@ void ClientWindow::on_actionToggleConnection_triggered ( ) {
     }
 
     if ( this->username == "" ) {
-      QMessageBox::critical ( this, tr ( "Error" ), tr ( "No username" ) );
+      sendMessage ( "critical", "Error", "no username" );
       return;
     }
     this->clientMain->setUsername ( username );
     if ( this->clientMain->connectToServer ( this->address, this->port ) ) {
       if ( this->username == "" ) {
-    QMessageBox::critical ( this, tr ( "Error" ),
-                tr ( "Cannot connect to server" ) );
+    sendMessage ( "critical", "Error", "Cannot connect to server" );
     return;
       }
     } else {
-      QMessageBox::information ( this, tr ( "Server" ),
-                 tr ( "Connected to server" ) );
+      sendMessage ( "info", "Server", "Connected to server" );
       this->connected = true;
       this->ui->actionToggleConnection->setIcon (
       QIcon ( ":/icons/disconnect" ) );
       this->ui->actionFrom_server->setEnabled ( true );
     }
   }
+}
+
+void ClientWindow::on_serverClosed ( ) {
+  std::cout << "am ajuns aici"
+        << "\n";
+  this->connected = false;
+  this->ui->actionToggleConnection->setIcon ( QIcon ( ":/icons/connect" ) );
+  this->ui->actionFrom_server->setDisabled ( true );
+  clientMain->closeConnection ( );
+  sendMessage ( "info", "Disconnected from server",
+        "The server encountered an internal error" );
+}
+
+void ClientWindow::sendMessage ( std::string type, std::string sub,
+                 std::string message ) {
+  if ( type == "info" )
+    QMessageBox::information ( this, tr ( sub.data ( ) ),
+                   tr ( message.data ( ) ) );
+  else if ( type == "critical" )
+    QMessageBox::critical ( this, tr ( sub.data ( ) ),
+                tr ( message.data ( ) ) );
+  else
+    QMessageBox::warning ( this, tr ( sub.data ( ) ), tr ( message.data ( ) ) );
 }

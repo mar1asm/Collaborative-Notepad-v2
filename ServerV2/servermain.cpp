@@ -13,6 +13,7 @@ serverMain::serverMain ( QObject *parent ) {
     this->available[ i ] = true;
   }
   this->getFiles ( );
+  safeShutdown = false;
 }
 
 serverMain::~serverMain ( ) {
@@ -52,9 +53,14 @@ int serverMain::startServer ( ) {
 
 void serverMain::stopServer ( ) {
   for ( int i = 0; i < threadsCount; i++ ) {
+    safeShutdown = true;
+    // shutdown(Listen_fd, SHUT_RDWR);
     if ( available[ i ] ) {
-      close ( clientSocketDescriptor[ i ] );
-      threadPool[ i ].join ( );
+      sendMessage ( clientSocketDescriptor[ i ], { "serverClosed" } );
+      shutdown ( clientSocketDescriptor[ i ], SHUT_RDWR );
+      shutdown ( serverSocketDescriptor, SHUT_RDWR );
+      close ( serverSocketDescriptor ); //??????????
+      // threadPool[ i ].join ( );
     }
     // sa trimit ceva mesaj sa stie
     // clientul ca s a oprit serverul
@@ -99,10 +105,39 @@ int serverMain::waitForClients ( ) {
   if ( ( client = accept ( serverSocketDescriptor,
                ( struct sockaddr * ) &fromSocket, &length ) ) <
        0 ) {
+    if ( errno == EINVAL && safeShutdown )
+      return 0;
     return -1;
   }
   lock.unlock ( );
   return client;
+}
+
+void serverMain::sendMessage ( int clientId,
+                   std::initializer_list< std::string > msgs,
+                   bool sendLength ) {
+  // nu credeam ca o sa ajung sa folosesc asta vreodata
+  for ( std::string msg : msgs ) {
+    std::cout << "Am trimis: " << msg << "\n";
+    if ( sendLength ) {
+      int messageLength = msg.length ( );
+      if ( write ( clientSocketDescriptor[ clientId ], &messageLength,
+           sizeof ( int ) ) <= 0 ) {
+    perror ( "[client]Eroare la write() spre client.\n" );
+      }
+      if ( write ( clientSocketDescriptor[ clientId ], msg.data ( ),
+           messageLength ) <= 0 ) {
+    perror ( "[client]Eroare la write() spre client.\n" );
+      }
+    } else {
+      int temp = std::stoi ( msg );
+
+      if ( write ( clientSocketDescriptor[ clientId ], &temp,
+           sizeof ( int ) ) <= 0 ) {
+    perror ( "[client]Eroare la write() spre client.\n" );
+      }
+    }
+  }
 }
 
 int serverMain::processRequest ( int clientId ) {
@@ -120,6 +155,7 @@ int serverMain::processRequest ( int clientId ) {
   }
 
   msg[ length ] = '\0';
+  std::cout << "Am primit: " << msg << "\n";
 
   // ca sa nu am 1000 de if-else-uri
 
@@ -173,7 +209,19 @@ void serverMain::setUsername ( int clientId ) {
   emit logMessage ( QString ( smsg.data ( ) ) );
 }
 
-void serverMain::sendListOfFiles ( int clientId ) {}
+void serverMain::sendListOfFiles ( int clientId ) {
+  const int numberOfFiles = fileNames.size ( );
+  this->sendMessage ( clientId, { "list" } );
+  this->sendMessage ( clientId, { std::to_string ( numberOfFiles ).data ( ) },
+              false );
+
+  for ( std::string file : fileNames ) {
+    // QFileInfo fi ( *file );
+    // std::cout << fi.fileName ( ).toStdString ( ) << "\n";
+    this->sendMessage ( clientId, { file } );
+    //}
+  }
+}
 
 void serverMain::updateFile ( int clientId ) {}
 
@@ -207,7 +255,9 @@ void serverMain::getFiles ( ) {
     QFile file ( iterator.next ( ) ); // citesc fisierele
     if ( file.open ( QIODevice::ReadOnly ) ) {
       refFile = &file;
-      files.push_back ( refFile );
+      files.push_back ( refFile ); //??????????????/
+      QFileInfo fileInfo ( file );
+      fileNames.push_back ( fileInfo.fileName ( ).toStdString ( ) );
     }
   }
 }

@@ -8,7 +8,9 @@
 #include <QString>
 #include <QTextStream>
 #include <QVector>
+#include <atomic>
 #include <errno.h>
+#include <initializer_list>
 #include <iostream>
 #include <mutex>
 #include <netinet/in.h>
@@ -30,10 +32,6 @@ class QThread;
 
 class serverMain : public QObject {
   static const int PORT = 2001;
-  const std::unordered_map< std::string, int > requestsNumbers {
-      { "username", 1 }, { "quit", -1 }, { "list", 2 },
-      { "update", 3 },	 { "new", 4 },	 { "idle", 5 } };
-  Q_OBJECT
   Q_DISABLE_COPY ( serverMain )
 public:
   explicit serverMain ( QObject *parent = nullptr );
@@ -44,12 +42,16 @@ public:
 private:
   ~serverMain ( );
   QObject serverWindow;
+  Q_OBJECT
 
   // communication
   struct sockaddr_in serverSocket;
   struct sockaddr_in fromSocket;
   int serverSocketDescriptor;
   int *clientSocketDescriptor;
+  const std::unordered_map< std::string, int > requestsNumbers {
+      { "username", 1 }, { "quit", -1 }, { "list", 2 },
+      { "update", 3 },	 { "new", 4 },	 { "idle", 5 } };
 
   // workers
 
@@ -60,8 +62,10 @@ private:
   int waitForClients ( );
   int processRequest ( int clientId );
   void spawnThreads ( );
+  std::atomic< bool > safeShutdown;
 
   std::vector< QFile * > files;
+  std::vector< std::string > fileNames;
   QString filesPath;
 
   // requests
@@ -71,6 +75,9 @@ private:
   void updateFile ( int clientId );
   void createFile ( int clientId );
   void disconnectClient ( int clientId );
+  void sendMessage ( int clientSocketDescriptor,
+             std::initializer_list< std::string > msgs,
+             bool sendLength = true );
 
   // aux
   int getAvailable ( );

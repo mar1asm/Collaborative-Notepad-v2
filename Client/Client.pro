@@ -26,11 +26,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         clientwindow.cpp \
-    clientmain.cpp
+    clientmain.cpp \
+    listoffileswidget.cpp
 
 HEADERS += \
         clientwindow.h \
-    clientmain.h
+    clientmain.h \
+    listoffileswidget.h
 
 FORMS += \
         clientwindow.ui

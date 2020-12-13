@@ -1,6 +1,8 @@
 #include "clientmain.h"
 
-ClientMain::ClientMain ( QObject *parent ) : QObject ( parent ) {}
+ClientMain::ClientMain ( QObject *parent ) : QObject ( parent ) {
+  hasServerClosed = false;
+}
 
 int ClientMain::connectToServer ( char *address, int port ) {
   if ( ( socketDescriptor = socket ( AF_INET, SOCK_STREAM, 0 ) ) == -1 ) {
@@ -22,8 +24,8 @@ int ClientMain::connectToServer ( char *address, int port ) {
 }
 
 void ClientMain::spawnListeningThread ( ) {
-  listeningThread = new std::thread ( &ClientMain::threadCallback, this );
-  listeningThread->detach ( );
+  listeningThread = std::thread ( &ClientMain::threadCallback, this );
+  listeningThread.detach ( );
 }
 
 int ClientMain::threadCallback ( ) {
@@ -31,34 +33,97 @@ int ClientMain::threadCallback ( ) {
   while ( ! error ) {
     error = listen ( );
   }
+  return 0;
 }
 
 int ClientMain::listen ( ) {
   int length;
-  int closed;
-  if ( closed =
-       ( read ( socketDescriptor, &length, sizeof ( length ) ) ) < 0 ) {
-    perror ( "[client]Eroare la read() de la server.\n" );
-    return errno;
-  } else {
-    if ( closed == 0 )
+  int readValue;
+  readValue = read ( socketDescriptor, &length, sizeof ( length ) );
+  if ( readValue <= 0 ) {
+    if ( ( errno == EINVAL && hasServerClosed ) || readValue == 0 ) {
+      hasServerClosed = false;
       return -1;
+    } else if ( readValue < 0 ) {
+      perror ( "[client]Eroare la read() de la server.\n" );
+      return errno;
+    }
   }
-  char *msg;
+  char msg[ length + 1 ];
   if ( read ( socketDescriptor, msg, length ) < 0 ) {
     perror ( "[client]Eroare la read() de la server.\n" );
     return errno;
   }
+  msg[ length ] = '\0';
+
+  std::cout << "Am primit " << msg << "\n";
+  processServerMessage ( msg );
+  return 0;
 }
 
-void ClientMain::sendRequest ( std::initializer_list< char * > msgs ) {
+void ClientMain::processServerMessage ( char *message ) {
+  switch ( messagesNumbers.at ( message ) ) {
+  case -1:
+    emit serverClosed ( ); // dc nu merge?
+    break;
+  case 1: // list
+    listFiles ( );
+    break;
+  case 2: // update
+    break;
+  case 3: // perm
+    break;
+  case 4: // idle
+    break;
+  default:
+    break;
+  }
+  return;
+}
+
+void ClientMain::listFiles ( ) {
+  int numberOfFiles;
+  if ( read ( socketDescriptor, &numberOfFiles, sizeof ( numberOfFiles ) ) <
+       0 ) {
+    perror ( "[client]Eroare la read() de la server.\n" );
+    return;
+  }
+  std::vector< std::string > files;
+  for ( int i = 0; i < numberOfFiles; i++ ) {
+    int filenameLength;
+    if ( read ( socketDescriptor, &filenameLength, sizeof ( filenameLength ) ) <
+     0 ) {
+      perror ( "[client]Eroare la read() de la server.\n" );
+      return;
+    }
+
+    char file[ filenameLength + 1 ];
+
+    if ( read ( socketDescriptor, file, filenameLength ) < 0 ) {
+      perror ( "[client]Eroare la read() de la server.\n" );
+      return;
+    }
+
+    // std::cout << file << "\n";
+    files.push_back ( file );
+  }
+  ListOfFilesWidget *listWidget;
+  listWidget = new ListOfFilesWidget;
+}
+
+void ClientMain::closeConnection ( ) {
+  shutdown ( this->socketDescriptor, SHUT_RDWR );
+}
+
+void ClientMain::sendRequest ( std::initializer_list< std::string > msgs ) {
   // nu credeam ca o sa ajung sa folosesc asta vreodata
-  for ( char *msg : msgs ) {
-    int requestLength = strlen ( msg );
+  for ( std::string msg : msgs ) {
+    std::cout << "Am trimis " << msg << "\n";
+    int requestLength = msg.size ( );
     if ( write ( socketDescriptor, &requestLength, sizeof ( int ) ) <= 0 ) {
       perror ( "[client]Eroare la write() spre server.\n" );
     }
-    if ( write ( socketDescriptor, msg, requestLength ) <= 0 ) {
+    if ( write ( socketDescriptor, msg.data ( ), requestLength ) <= 0 ) {
       perror ( "[client]Eroare la write() spre server.\n" );
     }
   }

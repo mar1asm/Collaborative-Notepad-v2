@@ -52,6 +52,10 @@ private slots:
 
   void on_actionToggleConnection_triggered ( );
 
+  void on_serverClosed ( );
+
+  void sendMessage ( std::string type, std::string sub, std::string message );
+
 private:
   Ui::ClientWindow *ui;
   QString currentFile = "";
