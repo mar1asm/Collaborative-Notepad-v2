@@ -27,17 +27,15 @@ class ClientMain : public QObject {
 public:
   ClientMain ( QObject *parent = nullptr );
   int connectToServer ( char *address, int port );
-  void sendRequest ( std::initializer_list< std::string > msgs );
+  void sendRequest ( std::initializer_list< std::string > msgs,
+             bool hasLength = true );
   void setUsername ( std::string username );
   void closeConnection ( );
 
 private:
   const std::unordered_map< std::string, int > messagesNumbers {
-      { "serverClosed", -1 },
-      { "list", 1 },
-      { "update", 2 },
-      { "perm", 3 },
-      { "idle", 4 } };
+      { "serverClosed", -1 }, { "list", 1 }, { "file", 2 },
+      { "update", 3 },	      { "perm", 4 }, { "idle", 5 } };
   std::atomic< bool > hasServerClosed;
   int port;
   std::thread listeningThread;
@@ -49,7 +47,9 @@ private:
   int listen ( );
   int threadCallback ( );
   void listFiles ( );
-  void processServerMessage ( char *message );
+  void processServerMessage ( std::string message );
+  void openFile ( );
+  std::string readMessage ( bool hasLength = true );
 
 public slots:
   void on_refreshFiles ( );
@@ -60,6 +60,7 @@ signals:
   void logMessage ( std::string type, std::string sub, std::string message );
   void openDialog ( QVector< QPair< QString, int > > files );
   void closeDialog ( );
+  void addLine ( QString line );
 };
 
 #endif // CLIENTMAIN_H

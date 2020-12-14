@@ -62,6 +62,10 @@ private slots:
 
   void on_closeDialog ( );
 
+  void on_openFile ( int fileId, QString filename );
+
+  void on_addLine ( QString line );
+
 private:
   Ui::ClientWindow *ui;
   QString currentFile = "";

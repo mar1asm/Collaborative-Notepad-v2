@@ -121,9 +121,12 @@ void serverMain::sendMessage ( int clientId,
                    bool sendLength ) {
   // nu credeam ca o sa ajung sa folosesc asta vreodata
   for ( std::string msg : msgs ) {
+    if ( msg.size ( ) == 0 )
+      msg += "\n";
     std::cout << "Am trimis: " << msg << "\n";
     if ( sendLength ) {
       int messageLength = msg.length ( );
+
       if ( write ( clientSocketDescriptor[ clientId ], &messageLength,
            sizeof ( int ) ) <= 0 ) {
     perror ( "[client]Eroare la write() spre client.\n" );
@@ -146,11 +149,10 @@ void serverMain::sendMessage ( int clientId,
 int serverMain::processRequest ( int clientId ) {
 
   std::string msg;
-  msg = readMessage ( clientSocketDescriptor[ clientId ] );
+  msg = readMessage ( clientId );
   if ( msg.size ( ) == 0 ) {
     return -1;
   }
-  std::cout << msg << "\n";
   // ca sa nu am 1000 de if-else-uri
 
   switch ( requestsNumbers.at ( msg ) ) {
@@ -164,12 +166,15 @@ int serverMain::processRequest ( int clientId ) {
     sendListOfFiles ( clientId );
     break;
   case 3:
-    updateFile ( clientId );
+    sendFileContent ( clientId );
     break;
   case 4:
-    createFile ( clientId );
+    updateFile ( clientId );
     break;
   case 5:
+    createFile ( clientId );
+    break;
+  case 6:
     disconnectClient ( clientId );
     break;
 
@@ -182,7 +187,7 @@ int serverMain::processRequest ( int clientId ) {
 
 void serverMain::setUsername ( int clientId ) {
   int length;
-  std::string msg = readMessage ( clientSocketDescriptor[ clientId ] );
+  std::string msg = readMessage ( clientId );
   if ( msg.size ( ) == 0 ) {
     emit logMessage ( QStringLiteral ( "eroare la read de la client" ) );
     perror ( "eroare la read de la client" );
@@ -208,6 +213,7 @@ void serverMain::sendListOfFiles ( int clientId ) {
               false );
   int fileIndex = 0;
   for ( std::string file : fileNames ) {
+
     // QFileInfo fi ( *file );
     // std::cout << fi.fileName ( ).toStdString ( ) << "\n";
     this->sendMessage ( clientId, { file } );
@@ -215,6 +221,31 @@ void serverMain::sendListOfFiles ( int clientId ) {
     clientId, { std::to_string ( nOfUsersFile[ fileIndex ] ) }, false );
     fileIndex++;
     //}
+  }
+}
+
+void serverMain::sendFileContent ( int clientId ) {
+  std::cout << "am ajuns aici\n";
+  std::string msg = readMessage ( clientId );
+  QString filename = QString ( msg.data ( ) );
+  // ceva max length de trimis
+  QFile file ( "documents/" + filename );
+  if ( ! file.open ( QIODevice::ReadOnly ) )
+    sendMessage ( clientId, { "error" } );
+  else {
+    sendMessage ( clientId, { "file" } );
+    int lineCount = 0;
+    QTextStream in ( &file );
+    while ( ! in.atEnd ( ) ) {
+      in.readLine ( );
+      lineCount++;
+    }
+    in.seek ( 0 );
+    sendMessage ( clientId, { std::to_string ( lineCount ) }, false );
+    while ( ! in.atEnd ( ) ) {
+      QString line ( in.readLine ( ) );
+      sendMessage ( clientId, { line.toStdString ( ) } );
+    }
   }
 }
 
@@ -268,10 +299,11 @@ int serverMain::getAvailable ( ) {
   return -1;
 }
 
-std::string serverMain::readMessage ( int clientDescriptor, bool hasLength ) {
+std::string serverMain::readMessage ( int clientId, bool hasLength ) {
   if ( hasLength ) {
     int length;
-    int readError = read ( clientDescriptor, &length, sizeof ( length ) );
+    int readError =
+    read ( clientSocketDescriptor[ clientId ], &length, sizeof ( length ) );
     if ( readError < 0 ) {
       perror ( "[Server] Erroare la read de la client" );
       return "";
@@ -280,7 +312,7 @@ std::string serverMain::readMessage ( int clientDescriptor, bool hasLength ) {
       return "quit";
     }
     char msg[ length + 1 ];
-    readError = read ( clientDescriptor, msg, length );
+    readError = read ( clientSocketDescriptor[ clientId ], msg, length );
     if ( readError < 0 ) {
       perror ( "[Server] Erroare la read de la client" );
       return "";
@@ -289,10 +321,12 @@ std::string serverMain::readMessage ( int clientDescriptor, bool hasLength ) {
       return "quit";
     }
     msg[ length ] = '\0';
+    std::cout << "mesajul e " << msg << " si lungimea e " << length << "\n";
     return msg;
   }
   int msg;
-  int readError = read ( clientDescriptor, &msg, sizeof ( msg ) );
+  int readError =
+      read ( clientSocketDescriptor[ clientId ], &msg, sizeof ( msg ) );
   if ( readError < 0 ) {
     perror ( "[Server] Erroare la read de la client" );
     return "";
@@ -300,6 +334,6 @@ std::string serverMain::readMessage ( int clientDescriptor, bool hasLength ) {
   if ( readError == 0 ) {
     return "quit";
   }
-
+  std::cout << "mesajul e " << msg << "\n";
   return std::to_string ( msg );
 }

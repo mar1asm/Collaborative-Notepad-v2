@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QPair>
 #include <QStringListModel>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 

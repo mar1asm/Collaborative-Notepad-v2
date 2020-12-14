@@ -50,8 +50,8 @@ private:
   int serverSocketDescriptor;
   int *clientSocketDescriptor;
   const std::unordered_map< std::string, int > requestsNumbers {
-      { "username", 1 }, { "quit", -1 }, { "list", 2 },
-      { "update", 3 },	 { "new", 4 },	 { "idle", 5 } };
+      { "username", 1 }, { "quit", -1 }, { "list", 2 }, { "file", 3 },
+      { "update", 4 },	 { "new", 5 },	 { "idle", 6 } };
 
   // workers
 
@@ -74,6 +74,7 @@ private:
   void sendListOfFiles ( int clientId );
   void updateFile ( int clientId );
   void createFile ( int clientId );
+  void sendFileContent ( int clientId );
   void disconnectClient ( int clientId );
   void sendMessage ( int clientSocketDescriptor,
              std::initializer_list< std::string > msgs,

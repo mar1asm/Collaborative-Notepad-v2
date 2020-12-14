@@ -17,6 +17,7 @@ void FilesListDialog::setItems ( QVector< QPair< QString, int > > files ) {
   for ( QPair< QString, int > el : files ) {
     QString fileInfo;
     fileInfo += el.first;
+    fileInfo.append ( ' ' );
     fileInfo.append ( '(' );
     fileInfo += QString ( std::to_string ( el.second ).data ( ) );
     fileInfo.append ( '/' );

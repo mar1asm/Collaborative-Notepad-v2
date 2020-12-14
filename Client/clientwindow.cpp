@@ -15,6 +15,7 @@ ClientWindow::ClientWindow ( QWidget *parent )
         &ClientWindow::on_openDialog );
   connect ( clientMain, &ClientMain::closeDialog, this,
         &ClientWindow::on_closeDialog );
+  connect ( clientMain, &ClientMain::addLine, this, &ClientWindow::on_addLine );
 }
 
 int ClientWindow::setConnectionData ( ) {
@@ -233,8 +234,8 @@ void ClientWindow::on_openDialog ( QVector< QPair< QString, int > > files ) {
         &ClientMain::on_refreshFiles );
   connect ( filesListDialog, &FilesListDialog::deleteFile, clientMain,
         &ClientMain::on_deleteFile );
-  connect ( filesListDialog, &FilesListDialog::openFile, clientMain,
-        &ClientMain::on_OpenFile );
+  connect ( filesListDialog, &FilesListDialog::openFile, this,
+        &ClientWindow::on_openFile );
   filesListDialog->setItems ( files );
   filesListDialog->show ( );
 }
@@ -242,4 +243,19 @@ void ClientWindow::on_openDialog ( QVector< QPair< QString, int > > files ) {
 void ClientWindow::on_closeDialog ( ) {
   delete filesListDialog;
   filesListDialog = nullptr;
+}
+
+void ClientWindow::on_openFile ( int fileId, QString filename ) {
+  std::string editedFilename;
+  editedFilename = filename.toStdString ( );
+  editedFilename =
+      editedFilename.substr ( 0, editedFilename.find_last_of ( ' ' ) );
+  this->currentFile = editedFilename.data ( );
+  setWindowTitle ( editedFilename.data ( ) );
+  clientMain->on_OpenFile ( fileId, editedFilename.data ( ) );
+  this->ui->textEdit->setText ( "" );
+}
+
+void ClientWindow::on_addLine ( QString line ) {
+  this->ui->textEdit->append ( line );
 }
