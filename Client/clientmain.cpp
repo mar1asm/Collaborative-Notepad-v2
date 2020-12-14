@@ -41,7 +41,7 @@ int ClientMain::listen ( ) {
   int readValue;
   readValue = read ( socketDescriptor, &length, sizeof ( length ) );
   if ( readValue <= 0 ) {
-    if ( ( errno == EINVAL && hasServerClosed ) || readValue == 0 ) {
+    if ( ( errno == EINVAL ) || readValue == 0 ) {
       hasServerClosed = false;
       return -1;
     } else if ( readValue < 0 ) {
