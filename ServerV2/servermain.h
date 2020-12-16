@@ -1,5 +1,6 @@
 #ifndef SERVERMAIN_H
 #define SERVERMAIN_H
+#include "servecommunication.h"
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
@@ -76,9 +77,6 @@ private:
   void createFile ( int clientId );
   void sendFileContent ( int clientId );
   void disconnectClient ( int clientId );
-  void sendMessage ( int clientSocketDescriptor,
-             std::initializer_list< std::string > msgs,
-             bool sendLength = true );
 
   // aux
   int getAvailable ( );
@@ -88,10 +86,6 @@ private:
   std::vector< int > nOfUsersFile; // cati clienti editeaza un fisier
   std::vector< std::pair< int, int > >
       clientsUsingFile; // ce clienti editeaza fisierele
-
-  std::string readMessage (
-      int clientDescriptor,
-      bool hasLength = true ); // am facut functia asta sa pot trata erorile
 
 public slots:
   void handleResults ( const QString &msg ) { emit logMessage ( msg ); };

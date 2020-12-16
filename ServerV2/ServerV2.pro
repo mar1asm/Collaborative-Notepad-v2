@@ -30,7 +30,8 @@ SOURCES += \
 
 HEADERS += \
         serverwindow.h \
-    servermain.h
+    servermain.h \
+    servecommunication.h
 
 FORMS += \
         serverwindow.ui
