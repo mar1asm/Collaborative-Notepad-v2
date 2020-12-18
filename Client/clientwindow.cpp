@@ -15,6 +15,10 @@ ClientWindow::ClientWindow ( QWidget *parent )
         &ClientWindow::on_openDialog );
   connect ( clientMain, &ClientMain::closeDialog, this,
         &ClientWindow::on_closeDialog );
+  connect ( clientMain, &ClientMain::openDownloadDialog, this,
+        &ClientWindow::on_openDownloadDialog );
+  connect ( clientMain, &ClientMain::downloadFile, this,
+        &ClientWindow::on_download_setName );
   connect ( clientMain, &ClientMain::addLine, this, &ClientWindow::on_addLine );
 }
 
@@ -159,6 +163,23 @@ void ClientWindow::on_actionSave_as_triggered ( ) {
   file.close ( );
 }
 
+void ClientWindow::on_download_setName ( QString fileContent ) {
+  QString fileName = QFileDialog::getSaveFileName ( this, "Save as" );
+  if ( fileName == nullptr )
+    return;
+  QFile file ( fileName );
+  if ( ! file.open ( QFile::WriteOnly | QFile ::Text ) ) {
+    sendMessage ( "warning", "Warning",
+          "Cannot save file : " +
+              file.errorString ( ).toStdString ( ) );
+    return;
+  }
+  QTextStream out ( &file );
+  out << fileContent;
+  file.close ( );
+  on_closeDownloadDialog ( );
+}
+
 void ClientWindow::on_actionExit_triggered ( ) { QApplication::quit ( ); }
 
 void ClientWindow::on_actionCopy_triggered ( ) { ui->textEdit->copy ( ); }
@@ -226,9 +247,26 @@ void ClientWindow::sendMessage ( std::string type, std::string sub,
     QMessageBox::warning ( this, tr ( sub.data ( ) ), tr ( message.data ( ) ) );
 }
 
+void ClientWindow::on_openDownloadDialog ( QVector< QString > files ) {
+  downloadDialog = new DownloadFileDialog ( this );
+  connect ( downloadDialog, &DownloadFileDialog::downloadFile, this,
+        &ClientWindow::on_downloadFile );
+  connect ( downloadDialog, &DownloadFileDialog::cancel, this,
+        &ClientWindow::on_closeDownloadDialog );
+  downloadDialog->setItems ( files );
+  downloadDialog->show ( );
+}
+
+void ClientWindow::on_downloadFile ( QString filename ) {
+  clientMain->sendRequest ( { "download", filename.toStdString ( ) } );
+}
+
+void ClientWindow::on_closeDownloadDialog ( ) {
+  delete downloadDialog;
+  downloadDialog = nullptr;
+}
+
 void ClientWindow::on_openDialog ( QVector< QPair< QString, int > > files ) {
-  std::cout << "am ajuns aici"
-        << "\n";
   filesListDialog = new FilesListDialog ( this );
   connect ( filesListDialog, &FilesListDialog::refreshListOfFiles, clientMain,
         &ClientMain::on_refreshFiles );
@@ -236,6 +274,9 @@ void ClientWindow::on_openDialog ( QVector< QPair< QString, int > > files ) {
         &ClientMain::on_deleteFile );
   connect ( filesListDialog, &FilesListDialog::openFile, this,
         &ClientWindow::on_openFile );
+  connect ( clientMain, &ClientMain::refreshFiles, filesListDialog,
+        &FilesListDialog::on_refreshListOfFiles );
+
   filesListDialog->setItems ( files );
   filesListDialog->show ( );
 }
@@ -258,4 +299,8 @@ void ClientWindow::on_openFile ( int fileId, QString filename ) {
 
 void ClientWindow::on_addLine ( QString line ) {
   this->ui->textEdit->append ( line );
+}
+
+void ClientWindow::on_actionDownload_triggered ( ) {
+  clientMain->sendRequest ( { "downloadList" } );
 }

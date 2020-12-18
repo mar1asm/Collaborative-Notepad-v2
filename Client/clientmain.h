@@ -2,6 +2,7 @@
 #define CLIENTMAIN_H
 
 #include <QDir>
+#include <QFileDialog>
 #include <QInputDialog>
 #include <QObject>
 #include <QTableWidget>
@@ -34,8 +35,8 @@ public:
 
 private:
   const std::unordered_map< std::string, int > messagesNumbers {
-      { "serverClosed", -1 }, { "list", 1 }, { "file", 2 },
-      { "update", 3 },	      { "perm", 4 }, { "idle", 5 } };
+      { "serverClosed", -1 }, { "list", 1 },	 { "file", 2 }, { "update", 3 },
+      { "downloadList", 4 },  { "download", 5 }, { "idle", 6 } };
   std::atomic< bool > hasServerClosed;
   int port;
   std::thread listeningThread;
@@ -50,6 +51,8 @@ private:
   void processServerMessage ( std::string message );
   void openFile ( );
   std::string readMessage ( bool hasLength = true );
+  void downloadFiles ( );
+  void download ( );
 
 public slots:
   void on_refreshFiles ( );
@@ -60,7 +63,11 @@ signals:
   void logMessage ( std::string type, std::string sub, std::string message );
   void openDialog ( QVector< QPair< QString, int > > files );
   void closeDialog ( );
+  void openDownloadDialog ( QVector< QString > files );
+  void closeDownloadDialog ( );
   void addLine ( QString line );
+  void refreshFiles ( QVector< QPair< QString, int > > files );
+  void downloadFile ( QString file );
 };
 
 #endif // CLIENTMAIN_H

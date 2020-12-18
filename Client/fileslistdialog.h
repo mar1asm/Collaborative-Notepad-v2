@@ -20,6 +20,8 @@ public:
   explicit FilesListDialog ( QWidget *parent = 0 );
   ~FilesListDialog ( );
   void setItems ( QVector< QPair< QString, int > > files );
+public slots:
+  void on_refreshListOfFiles ( QVector< QPair< QString, int > > files );
 
 private slots:
   void on_refreshButton_clicked ( );

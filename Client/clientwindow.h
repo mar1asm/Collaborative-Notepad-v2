@@ -4,6 +4,7 @@
 #include "clientmain.h"
 #include "fileslistdialog.h"
 
+#include "downloadfiledialog.h"
 #include <QFile>
 #include <QFileDialog>
 #include <QMainWindow>
@@ -66,6 +67,16 @@ private slots:
 
   void on_addLine ( QString line );
 
+  void on_actionDownload_triggered ( );
+
+  void on_openDownloadDialog ( QVector< QString > files );
+
+  void on_closeDownloadDialog ( );
+
+  void on_downloadFile ( QString filename );
+
+  void on_download_setName ( QString fileContent );
+
 private:
   Ui::ClientWindow *ui;
   QString currentFile = "";
@@ -77,6 +88,7 @@ private:
   std::string username = "";
 
   FilesListDialog *filesListDialog;
+  DownloadFileDialog *downloadDialog;
 
   void getUsername ( );
 };

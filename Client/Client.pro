@@ -27,16 +27,19 @@ SOURCES += \
         main.cpp \
         clientwindow.cpp \
     clientmain.cpp \
-    fileslistdialog.cpp
+    fileslistdialog.cpp \
+    downloadfiledialog.cpp
 
 HEADERS += \
         clientwindow.h \
     clientmain.h \
-    fileslistdialog.h
+    fileslistdialog.h \
+    downloadfiledialog.h
 
 FORMS += \
         clientwindow.ui \
-    fileslistdialog.ui
+    fileslistdialog.ui \
+    downloadfiledialog.ui
 
 DISTFILES +=
 

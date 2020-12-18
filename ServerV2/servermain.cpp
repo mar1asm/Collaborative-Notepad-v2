@@ -147,6 +147,12 @@ int serverMain::processRequest ( int clientId ) {
   case 6:
     disconnectClient ( clientId );
     break;
+  case 7:
+    sendFilesDownload ( clientId );
+    break;
+  case 8:
+    sendFileContentDownload ( clientId );
+    break;
 
   default:
     std::cout << "unknown comm";
@@ -189,6 +195,22 @@ void serverMain::sendListOfFiles ( int clientId ) {
     sendMessage ( clientSocketDescriptor[ clientId ], { file } );
     sendMessage ( clientSocketDescriptor[ clientId ],
           { std::to_string ( nOfUsersFile[ fileIndex ] ) }, false );
+    fileIndex++;
+    //}
+  }
+}
+
+void serverMain::sendFilesDownload ( int clientId ) {
+  const int numberOfFiles = fileNames.size ( );
+  sendMessage ( clientSocketDescriptor[ clientId ], { "downloadList" } );
+  sendMessage ( clientSocketDescriptor[ clientId ],
+        { std::to_string ( numberOfFiles ).data ( ) }, false );
+  int fileIndex = 0;
+  for ( std::string file : fileNames ) {
+
+    // QFileInfo fi ( *file );
+    // std::cout << fi.fileName ( ).toStdString ( ) << "\n";
+    sendMessage ( clientSocketDescriptor[ clientId ], { file } );
     fileIndex++;
     //}
   }
@@ -269,4 +291,29 @@ int serverMain::getAvailable ( ) {
     if ( available[ i ] )
       return i;
   return -1;
+}
+
+void serverMain::sendFileContentDownload ( int clientId ) {
+  QString filename (
+      readMessage ( clientSocketDescriptor[ clientId ] ).data ( ) );
+  QFile file ( "documents/" + filename );
+  if ( ! file.open ( QIODevice::ReadOnly ) )
+    sendMessage ( clientSocketDescriptor[ clientId ], { "error" } );
+  else {
+    sendMessage ( clientSocketDescriptor[ clientId ], { "download" } );
+  }
+  int lineCount = 0;
+  QTextStream in ( &file );
+  while ( ! in.atEnd ( ) ) {
+    in.readLine ( );
+    lineCount++;
+  }
+  in.seek ( 0 );
+  sendMessage ( clientSocketDescriptor[ clientId ],
+        { std::to_string ( lineCount ) }, false );
+  while ( ! in.atEnd ( ) ) {
+    QString line ( in.readLine ( ) );
+    sendMessage ( clientSocketDescriptor[ clientId ],
+          { line.toStdString ( ) } );
+  }
 }

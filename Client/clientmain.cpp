@@ -94,9 +94,11 @@ void ClientMain::processServerMessage ( std::string message ) {
     break;
   case 3: // update
     break;
-  case 4: // perm
+  case 4: // downloadFiles
+    downloadFiles ( );
     break;
-  case 5: // idle
+  case 5: // download
+    download ( );
     break;
   default:
     break;
@@ -104,8 +106,35 @@ void ClientMain::processServerMessage ( std::string message ) {
   return;
 }
 
+void ClientMain::download ( ) {
+  QString fileText;
+  std::string temp = readMessage ( false );
+  if ( temp == "" )
+    return;
+  int numberOfFiles = stoi ( temp );
+  for ( int i = 0; i < numberOfFiles; i++ ) {
+    std::string line = readMessage ( );
+
+    fileText += QString ( line.data ( ) + QLatin1Char ( '\n' ) );
+  }
+
+  emit downloadFile ( fileText );
+}
+
+void ClientMain::downloadFiles ( ) {
+  std::string temp = readMessage ( false );
+  QVector< QString > files;
+  int numberOfFiles = std::stoi ( temp );
+  for ( int i = 0; i < numberOfFiles; i++ ) {
+    QString file ( readMessage ( ).data ( ) );
+    files.push_back ( file );
+  }
+  emit openDownloadDialog ( files );
+}
+
 void ClientMain::openFile ( ) {
   std::string temp = readMessage ( false );
+
   if ( temp == "" )
     return;
   int numberOfFiles = stoi ( temp );
@@ -140,6 +169,8 @@ void ClientMain::listFiles ( ) {
   emit openDialog ( files );
 }
 
+// void ClientMain::downloadFile ( ) {}
+
 void ClientMain::closeConnection ( ) {
   shutdown ( this->socketDescriptor, SHUT_RDWR );
 }
@@ -173,7 +204,23 @@ void ClientMain::setUsername ( std::string username ) {
   this->username = username;
 }
 
-void ClientMain::on_refreshFiles ( ) {}
+void ClientMain::on_refreshFiles ( ) {
+  sendRequest ( { "list" } );
+  int numberOfFiles = std::stoi ( readMessage ( false ) );
+  QVector< QPair< QString, int > > files;
+  for ( int i = 0; i < numberOfFiles; i++ ) {
+
+    std::string filename;
+
+    filename = readMessage ( );
+
+    int clientsConnected;
+
+    clientsConnected = std::stoi ( readMessage ( false ) );
+    files.push_back (
+    qMakePair ( QString ( filename.data ( ) ), clientsConnected ) );
+  }
+}
 
 void ClientMain::on_OpenFile ( int fileId, QString filename ) {
   std::cout << "s-a apelat on_openFile\n";

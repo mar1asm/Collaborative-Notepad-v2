@@ -29,6 +29,11 @@ void FilesListDialog::setItems ( QVector< QPair< QString, int > > files ) {
   ui->listView->setModel ( model );
 }
 
+void FilesListDialog::on_refreshListOfFiles (
+    QVector< QPair< QString, int > > files ) {
+  setItems ( files );
+}
+
 void FilesListDialog::on_refreshButton_clicked ( ) {
   emit refreshListOfFiles ( );
 }

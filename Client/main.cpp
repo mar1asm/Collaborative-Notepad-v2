@@ -6,6 +6,7 @@ int main ( int argc, char *argv[] ) {
   QApplication a ( argc, argv );
   ClientWindow w;
   qRegisterMetaType< QVector< QPair< QString, int > > > ( );
+  qRegisterMetaType< QVector< QString > > ( );
   if ( w.setConnectionData ( ) )
     return -1;
   w.show ( );
