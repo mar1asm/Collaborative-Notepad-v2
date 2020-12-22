@@ -4,6 +4,7 @@
 ClientWindow::ClientWindow ( QWidget *parent )
     : QMainWindow ( parent ), ui ( new Ui::ClientWindow ) {
   ui->setupUi ( this );
+  locally = true;
   this->setCentralWidget ( ui->textEdit );
   setWindowTitle ( "New file" );
   clientMain = new ClientMain ( this );
@@ -77,9 +78,9 @@ bool ClientWindow::helper_isSaved ( ) {
   return true;
 }
 
-void ClientWindow::on_actionNew_triggered ( ) {
+void ClientWindow::on_actionNewLocal_triggered ( ) {
   bool isSaved = helper_isSaved ( );
-  if ( ! isSaved ) {
+  if ( ! isSaved && locally ) {
     QMessageBox saveBeforeClosing ( this );
     saveBeforeClosing.setText ( "The file has been modified" );
     saveBeforeClosing.setInformativeText (
@@ -98,6 +99,7 @@ void ClientWindow::on_actionNew_triggered ( ) {
       break;
     }
   }
+  locally = true;
   currentFile.clear ( );
   ui->textEdit->setText ( QString ( ) );
   setWindowTitle ( "New file" );
@@ -123,6 +125,7 @@ void ClientWindow::on_actionFrom_PC_triggered ( ) {
   QTextStream in ( &file );
   QString text = in.readAll ( );
   ui->textEdit->setText ( text );
+  locally = true;
   file.close ( );
 }
 
@@ -194,6 +197,9 @@ void ClientWindow::on_actionToggleConnection_triggered ( ) {
     this->ui->actionToggleConnection->setIcon ( QIcon ( ":/icons/connect" ) );
     this->clientMain->sendRequest ( { "quit" } );
     this->ui->actionFrom_server->setDisabled ( true );
+    this->ui->actionNewRemote->setDisabled ( true );
+    this->ui->actionUpload->setDisabled ( true );
+    this->ui->actionDownload->setDisabled ( true );
     sendMessage ( "info", "server", "Disconnected from server" );
   } else {
     if ( username == "" ) {
@@ -221,6 +227,9 @@ void ClientWindow::on_actionToggleConnection_triggered ( ) {
       this->ui->actionToggleConnection->setIcon (
       QIcon ( ":/icons/disconnect" ) );
       this->ui->actionFrom_server->setEnabled ( true );
+      this->ui->actionNewRemote->setEnabled ( true );
+      this->ui->actionUpload->setEnabled ( true );
+      this->ui->actionDownload->setEnabled ( true );
     }
   }
 }
@@ -295,6 +304,7 @@ void ClientWindow::on_openFile ( int fileId, QString filename ) {
   setWindowTitle ( editedFilename.data ( ) );
   clientMain->on_OpenFile ( fileId, editedFilename.data ( ) );
   this->ui->textEdit->setText ( "" );
+  locally = false;
 }
 
 void ClientWindow::on_addLine ( QString line ) {
@@ -303,4 +313,75 @@ void ClientWindow::on_addLine ( QString line ) {
 
 void ClientWindow::on_actionDownload_triggered ( ) {
   clientMain->sendRequest ( { "downloadList" } );
+}
+
+void ClientWindow::on_actionNewRemote_triggered ( ) {
+  bool ok;
+  bool isSaved = helper_isSaved ( );
+  if ( ! isSaved && locally ) {
+    QMessageBox saveBeforeClosing ( this );
+    saveBeforeClosing.setText ( "The file has been modified" );
+    saveBeforeClosing.setInformativeText (
+    "Do you want to save your changes?" );
+    saveBeforeClosing.setStandardButtons (
+    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel );
+    saveBeforeClosing.setDefaultButton ( QMessageBox::Save );
+    int answer = saveBeforeClosing.exec ( );
+    switch ( answer ) {
+    case QMessageBox::Save:
+      on_actionSave_triggered ( );
+      break;
+    case QMessageBox::Cancel:
+      return;
+    default:
+      break;
+    }
+  }
+  QString text = QInputDialog::getText ( this, tr ( "Save as" ),
+                     tr ( "File name:" ), QLineEdit::Normal,
+                     QDir::home ( ).dirName ( ), &ok );
+  if ( ok && ! text.isEmpty ( ) ) {
+    locally = false;
+    this->clientMain->sendRequest ( { "new", text.toStdString ( ) } );
+  }
+}
+
+void ClientWindow::on_actionUpload_triggered ( ) {
+  QString fileName = QFileDialog::getOpenFileName ( this, "Open file" );
+  if ( fileName == nullptr )
+    return;
+  QFile file ( fileName );
+  if ( ! file.open ( QIODevice::ReadOnly | QFile ::Text ) ) {
+    sendMessage ( "warning", "Warning",
+          "Cannot open file : " +
+              file.errorString ( ).toStdString ( ) );
+    return;
+  }
+  QTextStream in ( &file );
+  QFileInfo fileInfo ( file );
+  QString text = in.readAll ( );
+  QString filenameeeeeee ( fileInfo.fileName ( ) );
+  int temp = clientMain->uploadFile ( filenameeeeeee, text );
+  if ( temp == -2 ) {
+    QMessageBox changeName ( this );
+    changeName.setText ( "A file with this name already exists!" );
+    changeName.setInformativeText ( "Save with another name?" );
+    changeName.setStandardButtons ( QMessageBox::Retry | QMessageBox::Cancel );
+    changeName.setDefaultButton ( QMessageBox::Retry );
+    int answer = changeName.exec ( );
+    switch ( answer ) {
+    case QMessageBox::Retry:
+      on_actionUpload_triggered ( );
+      break;
+    case QMessageBox::Cancel:
+      return;
+    default:
+      break;
+    }
+  } else if ( temp == -1 ) {
+    sendMessage ( "error", "Error", "Error" );
+    return;
+  }
+  std::cout << "am ajuns aici\n";
+  sendMessage ( "info", "uploaded file", "file uploaded successfully" );
 }

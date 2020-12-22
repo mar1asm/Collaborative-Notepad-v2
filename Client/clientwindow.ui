@@ -51,7 +51,14 @@
      <addaction name="actionFrom_server"/>
      <addaction name="actionFrom_PC"/>
     </widget>
-    <addaction name="actionNew"/>
+    <widget class="QMenu" name="menuNew">
+     <property name="title">
+      <string>New</string>
+     </property>
+     <addaction name="actionNewLocal"/>
+     <addaction name="actionNewRemote"/>
+    </widget>
+    <addaction name="menuNew"/>
     <addaction name="menuOpen"/>
     <addaction name="actionSave"/>
     <addaction name="actionExit"/>
@@ -94,11 +101,6 @@
    <addaction name="separator"/>
    <addaction name="actionUpload"/>
   </widget>
-  <action name="actionNew">
-   <property name="text">
-    <string>New</string>
-   </property>
-  </action>
   <action name="actionSave">
    <property name="text">
     <string>Save</string>
@@ -209,6 +211,16 @@
    </property>
    <property name="text">
     <string>Upload</string>
+   </property>
+  </action>
+  <action name="actionNewLocal">
+   <property name="text">
+    <string>Local file</string>
+   </property>
+  </action>
+  <action name="actionNewRemote">
+   <property name="text">
+    <string>Remote file</string>
    </property>
   </action>
  </widget>

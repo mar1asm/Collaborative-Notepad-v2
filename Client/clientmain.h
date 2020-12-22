@@ -6,6 +6,7 @@
 #include <QInputDialog>
 #include <QObject>
 #include <QTableWidget>
+#include <QTextStream>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <iostream>
@@ -32,6 +33,7 @@ public:
              bool hasLength = true );
   void setUsername ( std::string username );
   void closeConnection ( );
+  int uploadFile ( QString fileName, QString fileContent );
 
 private:
   const std::unordered_map< std::string, int > messagesNumbers {

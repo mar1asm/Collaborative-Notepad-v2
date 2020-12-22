@@ -31,8 +31,6 @@ public:
   ~ClientWindow ( );
 
 private slots:
-  void on_actionNew_triggered ( );
-
   void on_actionSave_triggered ( );
 
   void on_actionSave_as_triggered ( );
@@ -77,6 +75,12 @@ private slots:
 
   void on_downloadSetName ( QString fileContent );
 
+  void on_actionNewLocal_triggered ( );
+
+  void on_actionNewRemote_triggered ( );
+
+  void on_actionUpload_triggered ( );
+
 private:
   Ui::ClientWindow *ui;
   QString currentFile = "";
@@ -92,7 +96,7 @@ private:
 
   void getUsername ( );
 
-  // bool
+  bool locally = true;
 };
 
 #endif // CLIENTWINDOW_H

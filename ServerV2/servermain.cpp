@@ -141,8 +141,8 @@ int serverMain::processRequest ( int clientId ) {
   case 4:
     updateFile ( clientId );
     break;
-  case 5:
-    createFile ( clientId );
+  case 5: // new
+    uploadFile ( clientId );
     break;
   case 6:
     disconnectClient ( clientId );
@@ -153,12 +153,48 @@ int serverMain::processRequest ( int clientId ) {
   case 8:
     sendFileContentDownload ( clientId );
     break;
+  case 9: // upload
+    uploadFile ( clientId );
+    break;
+  case 10: // upload
+    receiveFileContent ( clientId );
+    break;
 
   default:
     std::cout << "unknown comm";
     emit logMessage ( "unknow comm" );
   }
   return 0;
+}
+
+void serverMain::uploadFile ( int clientId ) {
+  std::string filename = readMessage ( clientSocketDescriptor[ clientId ] );
+  for ( std::string file : fileNames ) {
+    if ( file == filename ) {
+      std::cout << file << " " << filename << "\n";
+      sendMessage ( clientSocketDescriptor[ clientId ], { "used" } );
+      return;
+    }
+  }
+  sendMessage ( clientSocketDescriptor[ clientId ], { "ok" } );
+  fileNames.push_back ( filename );
+  clientsUsingFile.push_back ( std::make_pair ( clientId, -1 ) );
+  nOfUsersFile.push_back ( 1 );
+}
+
+void serverMain::receiveFileContent ( int clientId ) {
+  std::string filename = readMessage ( clientSocketDescriptor[ clientId ] );
+  std::string lines = readMessage ( clientSocketDescriptor[ clientId ], false );
+  std::cout << lines << "\n";
+  int numberOfLines = stoi ( lines );
+  QFile file ( "documents/" + QString ( filename.data ( ) ) );
+
+  file.open ( QIODevice::WriteOnly | QIODevice::Append );
+  for ( int i = 0; i < numberOfLines; i++ ) {
+    QString line = readMessage ( clientSocketDescriptor[ clientId ] ).data ( );
+    line += '\n';
+    file.write ( line.toStdString ( ).data ( ) );
+  }
 }
 
 void serverMain::setUsername ( int clientId ) {
@@ -173,7 +209,7 @@ void serverMain::setUsername ( int clientId ) {
   if ( msg == "quit" ) {
     clientDisconnected ( clientId );
     return;
-  }
+  } // todo - adauga asta peste tot...
 
   clientsUsernames[ clientId ] = msg;
 
@@ -244,8 +280,6 @@ void serverMain::sendFileContent ( int clientId ) {
 }
 
 void serverMain::updateFile ( int clientId ) {}
-
-void serverMain::createFile ( int clientId ) {}
 
 void serverMain::disconnectClient ( int clientId ) {}
 

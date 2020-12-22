@@ -133,11 +133,13 @@ void ClientMain::downloadFiles ( ) {
 }
 
 void ClientMain::openFile ( ) {
+
   std::string temp = readMessage ( false );
 
   if ( temp == "" )
     return;
   int numberOfFiles = stoi ( temp );
+  sendRequest ( { std::to_string ( numberOfFiles ) }, false );
   for ( int i = 0; i < numberOfFiles; i++ ) {
     std::string line = readMessage ( );
 
@@ -177,13 +179,15 @@ void ClientMain::closeConnection ( ) {
 
 void ClientMain::sendRequest ( std::initializer_list< std::string > msgs,
                    bool hasLength ) {
+
   // nu credeam ca o sa ajung sa folosesc asta vreodata
   for ( std::string msg : msgs ) {
+
+    std::cout << "trimit " << msg << " cu lungimea" << msg.size ( ) << "\n";
     if ( hasLength ) {
-      // std::cout << "Am trimis " << msg << "\n";
       int requestLength = msg.size ( );
-      std::cout << "mesajul e " << msg << " si lungimea e " << requestLength
-        << "\n";
+      // std::cout << "mesajul e " << msg << " si lungimea e " << requestLength
+      //   << "\n";
       if ( write ( socketDescriptor, &requestLength, sizeof ( int ) ) <= 0 ) {
     perror ( "[client]Eroare la write() spre server.\n" );
       }
@@ -191,8 +195,8 @@ void ClientMain::sendRequest ( std::initializer_list< std::string > msgs,
     perror ( "[client]Eroare la write() spre server.\n" );
       }
     } else {
+      std::cout << msg << "\n";
       int temp = std::stoi ( msg );
-      std::cout << " am mai trimis si altceva? ";
       if ( write ( socketDescriptor, &temp, sizeof ( int ) ) <= 0 ) {
     perror ( "[client]Eroare la write() spre server.\n" );
       }
@@ -235,4 +239,32 @@ void ClientMain::on_OpenFile ( int fileId, QString filename ) {
 void ClientMain::on_deleteFile ( int fileId, QString filename ) {
   std::cout << fileId << " " << filename.toStdString ( ) << "\n";
   emit closeDialog ( );
+}
+
+int ClientMain::uploadFile ( QString filename, QString fileContent ) {
+  sendRequest ( { "upload" } );
+  std::cout << filename.toStdString ( ) << "\n";
+  std::string temppp = filename.toStdString ( );
+  sendRequest ( { temppp } );
+  std::string answer = readMessage ( );
+
+  if ( answer == "ok" ) {
+    QTextStream text ( &fileContent );
+    QString line;
+    sendRequest ( { "fileContent" } );
+    sendRequest ( { temppp } );
+    int numberOfLines = 0;
+    while ( text.readLineInto ( &line ) )
+      numberOfLines++;
+    sendRequest ( { std::to_string ( numberOfLines ) }, false );
+    while ( text.readLineInto ( &line ) ) {
+      std::string temppp = line.toStdString ( );
+      sendRequest ( { temppp } );
+    }
+    return 0;
+  }
+  if ( answer == "used" ) {
+    return -2; // este deja un file cu numele asta
+  }
+  return -1;
 }

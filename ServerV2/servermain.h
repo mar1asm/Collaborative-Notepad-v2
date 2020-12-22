@@ -53,7 +53,8 @@ private:
   const std::unordered_map< std::string, int > requestsNumbers {
       { "username", 1 }, { "quit", -1 },	{ "list", 2 },
       { "file", 3 },	 { "update", 4 },	{ "new", 5 },
-      { "idle", 6 },	 { "downloadList", 7 }, { "download", 8 } };
+      { "idle", 6 },	 { "downloadList", 7 }, { "download", 8 },
+      { "upload", 9 },	 { "fileContent", 10 } };
 
   // workers
 
@@ -75,11 +76,12 @@ private:
   void clientDisconnected ( int clientId );
   void sendListOfFiles ( int clientId );
   void updateFile ( int clientId );
-  void createFile ( int clientId );
   void sendFileContent ( int clientId );
   void disconnectClient ( int clientId );
   void sendFilesDownload ( int clientId );
   void sendFileContentDownload ( int clientId );
+  void uploadFile ( int clientId );
+  void receiveFileContent ( int clientId );
 
   // aux
   int getAvailable ( );
