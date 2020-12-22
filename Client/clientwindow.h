@@ -75,7 +75,7 @@ private slots:
 
   void on_downloadFile ( QString filename );
 
-  void on_download_setName ( QString fileContent );
+  void on_downloadSetName ( QString fileContent );
 
 private:
   Ui::ClientWindow *ui;
@@ -91,6 +91,8 @@ private:
   DownloadFileDialog *downloadDialog;
 
   void getUsername ( );
+
+  // bool
 };
 
 #endif // CLIENTWINDOW_H

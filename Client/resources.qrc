@@ -2,6 +2,8 @@
     <qresource prefix="/icons">
         <file>disconnect.png</file>
         <file>connect.png</file>
+        <file>upload.png</file>
+        <file>download.png</file>
     </qresource>
     <qresource prefix="/files">
         <file>config</file>

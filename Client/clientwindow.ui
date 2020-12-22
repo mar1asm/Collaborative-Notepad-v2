@@ -54,8 +54,6 @@
     <addaction name="actionNew"/>
     <addaction name="menuOpen"/>
     <addaction name="actionSave"/>
-    <addaction name="actionSave_as"/>
-    <addaction name="actionDownload"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -88,8 +86,13 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="separator"/>
    <addaction name="actionToggleConnection"/>
+   <addaction name="separator"/>
+   <addaction name="separator"/>
+   <addaction name="actionDownload"/>
+   <addaction name="separator"/>
+   <addaction name="separator"/>
+   <addaction name="actionUpload"/>
   </widget>
   <action name="actionNew">
    <property name="text">
@@ -118,6 +121,10 @@
    </property>
   </action>
   <action name="actionDownload">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/download.png</normaloff>:/icons/download.png</iconset>
+   </property>
    <property name="text">
     <string>Download</string>
    </property>
@@ -193,6 +200,15 @@
    </property>
    <property name="toolTip">
     <string>connect to server</string>
+   </property>
+  </action>
+  <action name="actionUpload">
+   <property name="icon">
+    <iconset resource="resources.qrc">
+     <normaloff>:/icons/upload.png</normaloff>:/icons/upload.png</iconset>
+   </property>
+   <property name="text">
+    <string>Upload</string>
    </property>
   </action>
  </widget>

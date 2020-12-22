@@ -18,7 +18,7 @@ ClientWindow::ClientWindow ( QWidget *parent )
   connect ( clientMain, &ClientMain::openDownloadDialog, this,
         &ClientWindow::on_openDownloadDialog );
   connect ( clientMain, &ClientMain::downloadFile, this,
-        &ClientWindow::on_download_setName );
+        &ClientWindow::on_downloadSetName );
   connect ( clientMain, &ClientMain::addLine, this, &ClientWindow::on_addLine );
 }
 
@@ -163,7 +163,7 @@ void ClientWindow::on_actionSave_as_triggered ( ) {
   file.close ( );
 }
 
-void ClientWindow::on_download_setName ( QString fileContent ) {
+void ClientWindow::on_downloadSetName ( QString fileContent ) {
   QString fileName = QFileDialog::getSaveFileName ( this, "Save as" );
   if ( fileName == nullptr )
     return;
