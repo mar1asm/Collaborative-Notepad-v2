@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QPair>
 #include <QShortcut>
+#include <QTextEdit>
 #include <QTextStream>
 #include <QtPrintSupport/QPrintDialog>
 #include <QtPrintSupport/QPrinter>
@@ -97,6 +98,8 @@ private:
   void getUsername ( );
 
   bool locally = true;
+signals:
+  void textEdited ( int pos, int addedChars, int removedChars );
 };
 
 #endif // CLIENTWINDOW_H

@@ -132,15 +132,46 @@ void ClientMain::downloadFiles ( ) {
   emit openDownloadDialog ( files );
 }
 
+int ClientMain::on_newFile ( QString filename ) {
+  sendRequest ( { "new", filename.toStdString ( ) } );
+  std::string answer = readMessage ( );
+  if ( answer == "ok" )
+    return 0;
+  if ( answer == "used" )
+    return -2;
+  return -1;
+}
+
+int ClientMain::checkMax ( ) {
+
+  std::string maxim = readMessage ( );
+  if ( maxim == "max" ) {
+    return -1;
+  }
+  return 0;
+}
+
 void ClientMain::openFile ( ) {
+  if ( checkMax ( ) == -1 ) {
+    FileFullDialog *fileFullDialog;
+    fileFullDialog = new FileFullDialog ( );
+    bool openAnyway = fileFullDialog->openFileMax ( );
+    if ( openAnyway == false ) {
+      sendRequest ( { "cancel" } );
+      return;
+    }
+    sendRequest ( { "openAnyway" } );
+  }
 
   std::string temp = readMessage ( false );
 
   if ( temp == "" )
     return;
-  int numberOfFiles = stoi ( temp );
-  sendRequest ( { std::to_string ( numberOfFiles ) }, false );
-  for ( int i = 0; i < numberOfFiles; i++ ) {
+  int numberOfLines = stoi ( temp );
+
+  // sendRequest ( { std::to_string ( numberOfFiles ) }, false ); reminder nu
+  // mai scrie cod cand ti e somn
+  for ( int i = 0; i < numberOfLines; i++ ) {
     std::string line = readMessage ( );
 
     std::cout << "line e: " << line << "\n";
@@ -233,6 +264,7 @@ void ClientMain::on_OpenFile ( int fileId, QString filename ) {
   editedFilename =
       editedFilename.substr ( 0, editedFilename.find_last_of ( ' ' ) );
   sendRequest ( { "file", editedFilename } );
+  // todo pune numele la fisier sus
   emit closeDialog ( );
 }
 

@@ -1,10 +1,13 @@
 #ifndef CLIENTMAIN_H
 #define CLIENTMAIN_H
 
+#include "filefulldialog.h"
 #include <QDir>
 #include <QFileDialog>
 #include <QInputDialog>
+#include <QKeyEvent>
 #include <QObject>
+#include <QSignalBlocker>
 #include <QTableWidget>
 #include <QTextStream>
 #include <arpa/inet.h>
@@ -34,6 +37,8 @@ public:
   void setUsername ( std::string username );
   void closeConnection ( );
   int uploadFile ( QString fileName, QString fileContent );
+  void on_textEdited ( int pos, int addedChars, int removedChars );
+  int on_newFile ( QString filename );
 
 private:
   const std::unordered_map< std::string, int > messagesNumbers {
@@ -55,6 +60,8 @@ private:
   std::string readMessage ( bool hasLength = true );
   void downloadFiles ( );
   void download ( );
+
+  int checkMax ( );
 
 public slots:
   void on_refreshFiles ( );

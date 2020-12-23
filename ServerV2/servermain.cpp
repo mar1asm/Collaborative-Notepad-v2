@@ -142,7 +142,7 @@ int serverMain::processRequest ( int clientId ) {
     updateFile ( clientId );
     break;
   case 5: // new
-    uploadFile ( clientId );
+    uploadFile ( clientId, true );
     break;
   case 6:
     disconnectClient ( clientId );
@@ -167,26 +167,53 @@ int serverMain::processRequest ( int clientId ) {
   return 0;
 }
 
-void serverMain::uploadFile ( int clientId ) {
+void serverMain::uploadFile ( int clientId, bool isNew ) {
+
   std::string filename = readMessage ( clientSocketDescriptor[ clientId ] );
+  std::string message;
+
+  std::string action = isNew ? "creeze" : "uploadeze";
+
+  message = clientsUsernames[ clientId ] + " a solicitat sa " + action +
+        " fisierul " + filename;
+  emit logMessage ( QString ( message.data ( ) ) );
+
   for ( std::string file : fileNames ) {
     if ( file == filename ) {
       std::cout << file << " " << filename << "\n";
+      message = "Fisierul cu numele" + filename +
+        "exista deja. Am trimis notificare catre " +
+        clientsUsernames[ clientId ];
+      emit logMessage ( QString ( message.data ( ) ) );
       sendMessage ( clientSocketDescriptor[ clientId ], { "used" } );
       return;
     }
   }
+  message = "Am creat fisierul cu numele " + filename +
+        ". Am trimis notificare catre " + clientsUsernames[ clientId ];
+  emit logMessage ( QString ( message.data ( ) ) );
+
   sendMessage ( clientSocketDescriptor[ clientId ], { "ok" } );
   fileNames.push_back ( filename );
   clientsUsingFile.push_back ( std::make_pair ( clientId, -1 ) );
   nOfUsersFile.push_back ( 1 );
+  if ( isNew ) {
+    QFile file ( "documents/" + QString ( filename.data ( ) ) );
+    file.open ( QIODevice::ReadWrite );
+    file.close ( );
+  }
 }
 
 void serverMain::receiveFileContent ( int clientId ) {
+
   std::string filename = readMessage ( clientSocketDescriptor[ clientId ] );
   std::string lines = readMessage ( clientSocketDescriptor[ clientId ], false );
   std::cout << lines << "\n";
   int numberOfLines = stoi ( lines );
+
+  std::string message = clientsUsernames[ clientId ] +
+            " a trimis continutul fisierului " + filename;
+  emit logMessage ( QString ( message.data ( ) ) );
   QFile file ( "documents/" + QString ( filename.data ( ) ) );
 
   file.open ( QIODevice::WriteOnly | QIODevice::Append );
@@ -209,7 +236,7 @@ void serverMain::setUsername ( int clientId ) {
   if ( msg == "quit" ) {
     clientDisconnected ( clientId );
     return;
-  } // todo - adauga asta peste tot...
+  }
 
   clientsUsernames[ clientId ] = msg;
 
@@ -220,6 +247,14 @@ void serverMain::setUsername ( int clientId ) {
 
 void serverMain::sendListOfFiles ( int clientId ) {
   const int numberOfFiles = fileNames.size ( );
+  std::string message;
+  message = clientsUsernames[ clientId ] +
+        " a solicitat lista de fisiere disponibile pentru deschidere.";
+  emit logMessage ( QString ( message.data ( ) ) );
+  message = "Am trimis lista fisierelor disponibile pentru deschidere catre " +
+        clientsUsernames[ clientId ];
+  emit logMessage ( QString ( message.data ( ) ) );
+
   sendMessage ( clientSocketDescriptor[ clientId ], { "list" } );
   sendMessage ( clientSocketDescriptor[ clientId ],
         { std::to_string ( numberOfFiles ).data ( ) }, false );
@@ -238,6 +273,13 @@ void serverMain::sendListOfFiles ( int clientId ) {
 
 void serverMain::sendFilesDownload ( int clientId ) {
   const int numberOfFiles = fileNames.size ( );
+  std::string message;
+  message = clientsUsernames[ clientId ] +
+        " a solicitat lista de fisiere disponibile pentru descarcare.";
+  emit logMessage ( QString ( message.data ( ) ) );
+  message = "Am trimis lista fisierelor disponibile pentru descarcare catre " +
+        clientsUsernames[ clientId ];
+  emit logMessage ( QString ( message.data ( ) ) );
   sendMessage ( clientSocketDescriptor[ clientId ], { "downloadList" } );
   sendMessage ( clientSocketDescriptor[ clientId ],
         { std::to_string ( numberOfFiles ).data ( ) }, false );
@@ -252,16 +294,72 @@ void serverMain::sendFilesDownload ( int clientId ) {
   }
 }
 
+int serverMain::checkFileFull ( int clientId, std::string filename ) {
+  for ( unsigned long i = 0; i < fileNames.size ( ); i++ ) {
+    if ( fileNames[ i ] == filename ) {
+      if ( nOfUsersFile[ i ] == 2 ) {
+    sendMessage ( clientSocketDescriptor[ clientId ], { "max" } );
+    return -1;
+      } else {
+    sendMessage ( clientSocketDescriptor[ clientId ], { "notMax" } );
+    return 0;
+      }
+    }
+  }
+  return -2;
+}
+
+void serverMain::updateClientsFiles ( int clientId, std::string filename,
+                      bool disconnected ) {
+  for ( unsigned long i = 0; i < clientsUsingFile.size ( ); i++ ) {
+    if ( ! disconnected ) {
+      if ( fileNames[ i ] == filename ) {
+    nOfUsersFile[ i ]++;
+    if ( clientsUsingFile[ i ].first == -1 )
+      clientsUsingFile[ i ].first = clientId;
+    else
+      clientsUsingFile[ i ].second = clientId;
+    continue;
+      }
+    }
+    std::pair< int, int > clients;
+    clients = clientsUsingFile[ i ];
+    if ( clients.first == clientId ) {
+      clients.first = -1;
+      nOfUsersFile[ i ]--;
+    }
+    if ( clients.second == clientId ) {
+      clients.second = -1;
+      nOfUsersFile[ i ]--;
+    }
+    clientsUsingFile[ i ] = clients;
+  }
+}
+
 void serverMain::sendFileContent ( int clientId ) {
-  std::cout << "am ajuns aici\n";
   std::string msg = readMessage ( clientSocketDescriptor[ clientId ] );
+  std::string message;
   QString filename = QString ( msg.data ( ) );
+  sendMessage ( clientSocketDescriptor[ clientId ], { "file" } );
+
+  int fileFull = checkFileFull ( clientId, filename.toStdString ( ) );
+  if ( fileFull ) {
+    std::string action = readMessage ( clientSocketDescriptor[ clientId ] );
+    if ( action == "cancel" )
+      return;
+  }
+
+  message =
+      clientsUsernames[ clientId ] + " a solicitat sa deschida fisierul " + msg;
+  emit logMessage ( QString ( message.data ( ) ) );
+
   // ceva max length de trimis
   QFile file ( "documents/" + filename );
-  if ( ! file.open ( QIODevice::ReadOnly ) )
+  if ( ! file.open ( QIODevice::ReadOnly ) ) {
     sendMessage ( clientSocketDescriptor[ clientId ], { "error" } );
-  else {
-    sendMessage ( clientSocketDescriptor[ clientId ], { "file" } );
+    return;
+  } else {
+
     int lineCount = 0;
     QTextStream in ( &file );
     while ( ! in.atEnd ( ) ) {
@@ -277,6 +375,7 @@ void serverMain::sendFileContent ( int clientId ) {
             { line.toStdString ( ) } );
     }
   }
+  updateClientsFiles ( clientId, filename.toStdString ( ) );
 }
 
 void serverMain::updateFile ( int clientId ) {}
@@ -331,11 +430,21 @@ void serverMain::sendFileContentDownload ( int clientId ) {
   QString filename (
       readMessage ( clientSocketDescriptor[ clientId ] ).data ( ) );
   QFile file ( "documents/" + filename );
-  if ( ! file.open ( QIODevice::ReadOnly ) )
+  if ( ! file.open ( QIODevice::ReadOnly ) ) {
     sendMessage ( clientSocketDescriptor[ clientId ], { "error" } );
-  else {
+    return;
+  } else {
     sendMessage ( clientSocketDescriptor[ clientId ], { "download" } );
   }
+
+  std::string message;
+  message = clientsUsernames[ clientId ] +
+        " a solicitat sa descarce fisierul " + filename.toStdString ( );
+  emit logMessage ( QString ( message.data ( ) ) );
+  message = "Am trimis fisierul " + clientsUsernames[ clientId ] + " catre " +
+        clientsUsernames[ clientId ];
+  emit logMessage ( QString ( message.data ( ) ) );
+
   int lineCount = 0;
   QTextStream in ( &file );
   while ( ! in.atEnd ( ) ) {

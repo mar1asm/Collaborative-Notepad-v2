@@ -80,13 +80,16 @@ private:
   void disconnectClient ( int clientId );
   void sendFilesDownload ( int clientId );
   void sendFileContentDownload ( int clientId );
-  void uploadFile ( int clientId );
+  void uploadFile ( int clientId, bool isNew = false );
   void receiveFileContent ( int clientId );
 
   // aux
   int getAvailable ( );
+  int checkFileFull ( int clientId, std::string filename );
   bool *available;
   void getFiles ( );
+  void updateClientsFiles ( int clientId, std::string filename,
+                bool disconnected = false );
   std::string *clientsUsernames;
   std::vector< int > nOfUsersFile; // cati clienti editeaza un fisier
   std::vector< std::pair< int, int > >

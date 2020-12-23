@@ -21,6 +21,16 @@ ClientWindow::ClientWindow ( QWidget *parent )
   connect ( clientMain, &ClientMain::downloadFile, this,
         &ClientWindow::on_downloadSetName );
   connect ( clientMain, &ClientMain::addLine, this, &ClientWindow::on_addLine );
+  auto text = ui->textEdit->document ( );
+  QObject::connect ( text, &QTextDocument::contentsChange,
+             [ = ] ( int pos, int removedChars, int addedChars ) {
+
+             } );
+
+  ui->actionFrom_server->setDisabled ( true );
+  ui->actionNewRemote->setDisabled ( true );
+  ui->actionUpload->setDisabled ( true );
+  ui->actionDownload->setDisabled ( true );
 }
 
 int ClientWindow::setConnectionData ( ) {
@@ -342,7 +352,30 @@ void ClientWindow::on_actionNewRemote_triggered ( ) {
                      QDir::home ( ).dirName ( ), &ok );
   if ( ok && ! text.isEmpty ( ) ) {
     locally = false;
-    this->clientMain->sendRequest ( { "new", text.toStdString ( ) } );
+    int temp = clientMain->on_newFile ( text );
+    if ( temp == -2 ) {
+      QMessageBox changeName ( this );
+      changeName.setText ( "A file with this name already exists!" );
+      changeName.setInformativeText ( "Save with another name?" );
+      changeName.setStandardButtons ( QMessageBox::Retry |
+                      QMessageBox::Cancel );
+      changeName.setDefaultButton ( QMessageBox::Retry );
+      int answer = changeName.exec ( );
+      switch ( answer ) {
+      case QMessageBox::Retry:
+    on_actionUpload_triggered ( );
+    break;
+      case QMessageBox::Cancel:
+    return;
+      default:
+    break;
+      };
+    }
+    if ( temp == -1 ) {
+      sendMessage ( "error", "error", "error" );
+      return;
+    }
+    sendMessage ( "info", "new file", "new file created successfully" );
   }
 }
 
